@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── Light mode ───────────────────────────────────────────────────────────
+     #EEF5FF → hsl(215 100% 97%)   background (very light blue)
+     #B4D4FF → hsl(214 100% 85%)   card (light blue)
+     #86B6F6 → hsl(214  86% 75%)   secondary / accent
+     #176B87 → hsl(195  71% 31%)   primary (deep teal)
+  ───────────────────────────────────────────────────────────────────────── */
+  :root {
+    --background: 215 100% 97%;      /* #EEF5FF */
+    --foreground: 195 71% 12%;       /* very dark teal */
+
+    --card: 214 100% 85%;            /* #B4D4FF */
+    --card-foreground: 195 71% 12%;
+
+    --popover: 215 100% 97%;
+    --popover-foreground: 195 71% 12%;
+
+    --primary: 195 71% 31%;          /* #176B87 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 100% 85%;       /* #B4D4FF */
+    --secondary-foreground: 195 71% 12%;
+
+    --muted: 214 80% 90%;            /* between background and card */
+    --muted-foreground: 214 30% 45%; /* medium blue-gray */
+
+    --accent: 214 70% 88%;           /* hover states */
+    --accent-foreground: 195 71% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 44%;
+    --warning-foreground: 195 71% 12%;
+
+    --border: 214 60% 78%;           /* between #B4D4FF and #86B6F6 */
+    --input: 214 60% 78%;
+    --ring: 195 71% 31%;             /* #176B87 */
+
+    --radius: 0.5rem;
+  }
+
+  /* ── Dark mode – cielo nocturno ──────────────────────────────────────────
+     Fondo medianoche profundo · acentos cyan/celeste brillante
+  ───────────────────────────────────────────────────────────────────────── */
+  .dark {
+    --background: 216 58% 8%;        /* medianoche #071525 */
+    --foreground: 200 65% 92%;       /* celeste muy claro */
+
+    --card: 215 54% 12%;             /* navy oscuro #0C1D31 */
+    --card-foreground: 200 65% 92%;
+
+    --popover: 216 58% 8%;
+    --popover-foreground: 200 65% 92%;
+
+    --primary: 193 76% 52%;          /* cyan cielo brillante */
+    --primary-foreground: 216 58% 8%;
+
+    --secondary: 215 48% 18%;
+    --secondary-foreground: 200 65% 92%;
+
+    --muted: 215 48% 16%;
+    --muted-foreground: 210 30% 58%; /* azul-gris medio */
+
+    --accent: 215 48% 20%;
+    --accent-foreground: 200 65% 92%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 200 65% 92%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 200 65% 92%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 216 58% 8%;
+
+    --border: 215 42% 20%;
+    --input: 215 42% 20%;
+    --ring: 193 76% 52%;             /* cyan cielo */
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html { scroll-behavior: smooth; }
+}
+
+/* PWA safe areas */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ── Scrollbar – dark ──────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dark ::-webkit-scrollbar-track { background: hsl(216 58% 8%); }
+.dark ::-webkit-scrollbar-thumb { background: hsl(215 42% 24%); border-radius: 999px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: hsl(193 76% 52% / 0.5); }
+.dark * { scrollbar-width: thin; scrollbar-color: hsl(215 42% 24%) hsl(216 58% 8%); }
+
+/* ── Scrollbar – light ─────────────────────────────────────────────────── */
+:root:not(.dark) ::-webkit-scrollbar { width: 6px; height: 6px; }
+:root:not(.dark) ::-webkit-scrollbar-track { background: hsl(215 100% 97%); }
+:root:not(.dark) ::-webkit-scrollbar-thumb { background: hsl(214 86% 75% / 0.6); border-radius: 999px; }
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover { background: hsl(195 71% 31% / 0.5); }
+:root:not(.dark) * { scrollbar-width: thin; scrollbar-color: hsl(214 86% 75% / 0.6) hsl(215 100% 97%); }
