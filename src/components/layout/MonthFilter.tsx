@@ -1,7 +1,13 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { MonthFilter as MonthFilterType, QuincenaFilter } from '@/core/types'
 
 interface Props {
@@ -37,16 +43,34 @@ export function MonthFilter({ filter, onChange }: Props) {
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={prev}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Select value={filter.month.toString()} onValueChange={(v) => onChange({ ...filter, month: Number(v) })}>
-          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+        <Select
+          value={filter.month.toString()}
+          onValueChange={(v) => onChange({ ...filter, month: Number(v) })}
+        >
+          <SelectTrigger className="h-8 w-32">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            {months.map((m, i) => <SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>)}
+            {months.map((m, i) => (
+              <SelectItem key={i} value={(i + 1).toString()}>
+                {m}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <Select value={filter.year.toString()} onValueChange={(v) => onChange({ ...filter, year: Number(v) })}>
-          <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+        <Select
+          value={filter.year.toString()}
+          onValueChange={(v) => onChange({ ...filter, year: Number(v) })}
+        >
+          <SelectTrigger className="h-8 w-20">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            {years.map((y) => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+            {years.map((y) => (
+              <SelectItem key={y} value={y.toString()}>
+                {y}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={next}>
@@ -60,7 +84,9 @@ export function MonthFilter({ filter, onChange }: Props) {
             key={value}
             onClick={() => onChange({ ...filter, quincena: value })}
             className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-              filter.quincena === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              filter.quincena === value
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {label}

@@ -6,13 +6,163 @@ import type {
   PaginatedResponseDTO,
   CreateTransactionDTO,
   ConfirmTransactionDTO,
+  AdminUserDTO,
+  UpdateUserRoleDTO,
+  UpdateUserStatusDTO,
+  CardDTO,
+  CreateCardDTO,
+  BudgetEventDTO,
+  CreateEventDTO,
+  InviteParticipantDTO,
+  RespondInvitationDTO,
+  AddShoppingItemDTO,
+  ToggleShoppingItemDTO,
+  MonthlyTrendDTO,
 } from '@/core/dtos'
-import type { MonthFilter, QuincenaFilter, QuincenaType } from '@/core/types'
+import type {
+  MonthFilter,
+  QuincenaFilter,
+  QuincenaType,
+  UserRole,
+  UserStatus,
+  EventParticipant,
+  ShoppingItem,
+} from '@/core/types'
 import { getDaysInMonth } from 'date-fns'
+import { getIdempotentResult, setIdempotentResult } from '@/lib/idempotency'
 
 const delay = (ms = 800) => new Promise<void>((r) => setTimeout(r, ms))
 
-let mockBalance = 15_420.50
+// ─── Fixed mock users ─────────────────────────────────────────────────────────
+
+interface MockUser extends AdminUserDTO {
+  password: string
+}
+
+let mockUsers: MockUser[] = [
+  {
+    id: 'usr_admin_001',
+    email: 'admin@financeapp.com',
+    name: 'Carlos Velasquez',
+    firstName: 'Carlos',
+    lastName: 'Velasquez',
+    alias: '@admin',
+    role: 'ADMIN' as UserRole,
+    status: 'active' as UserStatus,
+    password: 'admin123',
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr_002',
+    email: 'ana.garcia@example.com',
+    name: 'Ana Garcia',
+    firstName: 'Ana',
+    lastName: 'Garcia',
+    alias: '@ana_garcia',
+    role: 'USER' as UserRole,
+    status: 'active' as UserStatus,
+    password: 'user123',
+    createdAt: '2024-03-15T00:00:00.000Z',
+  },
+  {
+    id: 'usr_003',
+    email: 'pedro.lopez@example.com',
+    name: 'Pedro Lopez',
+    firstName: 'Pedro',
+    lastName: 'Lopez',
+    alias: '@pedro_lopez',
+    role: 'USER' as UserRole,
+    status: 'blocked' as UserStatus,
+    password: 'user123',
+    createdAt: '2024-06-20T00:00:00.000Z',
+  },
+]
+
+// ─── Mock cards ───────────────────────────────────────────────────────────────
+
+let mockCards: CardDTO[] = [
+  {
+    id: 'card_001',
+    userId: 'usr_admin_001',
+    name: 'BBVA Azul',
+    lastFour: '4521',
+    type: 'CREDIT',
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'card_002',
+    userId: 'usr_admin_001',
+    name: 'Banamex Oro',
+    lastFour: '7842',
+    type: 'CREDIT',
+    createdAt: '2024-02-15T00:00:00.000Z',
+  },
+  {
+    id: 'card_003',
+    userId: 'usr_admin_001',
+    name: 'HSBC Débito',
+    lastFour: '1309',
+    type: 'DEBIT',
+    createdAt: '2024-03-01T00:00:00.000Z',
+  },
+]
+
+// ─── Mock events ──────────────────────────────────────────────────────────────
+
+let mockEvents: BudgetEventDTO[] = [
+  {
+    id: 'evt_001',
+    title: 'Picnic de Verano',
+    description: 'Reunión en el parque para celebrar el verano con comida y juegos.',
+    goalAmount: 500,
+    deadline: '2026-06-30',
+    createdBy: 'usr_admin_001',
+    status: 'ACTIVE',
+    participants: [
+      {
+        userId: 'usr_002',
+        alias: '@ana_garcia',
+        assignedPct: 30,
+        status: 'CONFIRMED',
+        joinedAt: '2026-05-01T10:00:00.000Z',
+        respondedAt: '2026-05-02T09:00:00.000Z',
+      },
+      {
+        userId: 'usr_003',
+        alias: '@pedro_lopez',
+        assignedPct: 30,
+        status: 'PENDING_CONFIRMATION',
+        joinedAt: '2026-05-03T14:00:00.000Z',
+      },
+    ],
+    shoppingItems: [
+      {
+        id: 'si_001',
+        name: 'Carbón',
+        estimatedCost: 80,
+        bought: true,
+        boughtBy: 'usr_admin_001',
+        boughtAt: '2026-05-04T11:00:00.000Z',
+      },
+      {
+        id: 'si_002',
+        name: 'Bebidas',
+        estimatedCost: 120,
+        bought: false,
+      },
+      {
+        id: 'si_003',
+        name: 'Servilletas y platos',
+        estimatedCost: 30,
+        bought: false,
+      },
+    ],
+    createdAt: '2026-05-01T09:00:00.000Z',
+    updatedAt: '2026-05-04T11:00:00.000Z',
+  },
+]
+
+let mockBalance = 15_420.5
 let mockTransactions: TransactionResponseDTO[] = buildSeedTransactions()
 
 function buildHistoricalTransactions(): TransactionResponseDTO[] {
@@ -20,15 +170,69 @@ function buildHistoricalTransactions(): TransactionResponseDTO[] {
   const results: TransactionResponseDTO[] = []
 
   const scheduledTemplates = [
-    { description: 'Renta', amount: 6_500, dueDay: 1, quincena: 'primera' as QuincenaType, category: 'vivienda' },
-    { description: 'Luz CFE', amount: 850, dueDay: 5, quincena: 'primera' as QuincenaType, category: 'servicios' },
-    { description: 'Internet Telmex', amount: 480, dueDay: 8, quincena: 'primera' as QuincenaType, category: 'servicios' },
-    { description: 'Seguro Gastos Médicos', amount: 1_200, dueDay: 10, quincena: 'primera' as QuincenaType, category: 'salud' },
-    { description: 'Colegio', amount: 3_200, dueDay: 12, quincena: 'primera' as QuincenaType, category: 'educacion' },
-    { description: 'Tarjeta BBVA', amount: 2_400, dueDay: 17, quincena: 'segunda' as QuincenaType, category: 'deuda' },
-    { description: 'Tarjeta Banamex', amount: 1_800, dueDay: 20, quincena: 'segunda' as QuincenaType, category: 'deuda' },
-    { description: 'Gas', amount: 350, dueDay: 22, quincena: 'segunda' as QuincenaType, category: 'servicios' },
-    { description: 'Netflix + Spotify', amount: 290, dueDay: 25, quincena: 'segunda' as QuincenaType, category: 'entretenimiento' },
+    {
+      description: 'Renta',
+      amount: 6_500,
+      dueDay: 1,
+      quincena: 'primera' as QuincenaType,
+      category: 'vivienda',
+    },
+    {
+      description: 'Luz CFE',
+      amount: 850,
+      dueDay: 5,
+      quincena: 'primera' as QuincenaType,
+      category: 'servicios',
+    },
+    {
+      description: 'Internet Telmex',
+      amount: 480,
+      dueDay: 8,
+      quincena: 'primera' as QuincenaType,
+      category: 'servicios',
+    },
+    {
+      description: 'Seguro Gastos Médicos',
+      amount: 1_200,
+      dueDay: 10,
+      quincena: 'primera' as QuincenaType,
+      category: 'salud',
+    },
+    {
+      description: 'Colegio',
+      amount: 3_200,
+      dueDay: 12,
+      quincena: 'primera' as QuincenaType,
+      category: 'educacion',
+    },
+    {
+      description: 'Tarjeta BBVA',
+      amount: 2_400,
+      dueDay: 17,
+      quincena: 'segunda' as QuincenaType,
+      category: 'deuda',
+    },
+    {
+      description: 'Tarjeta Banamex',
+      amount: 1_800,
+      dueDay: 20,
+      quincena: 'segunda' as QuincenaType,
+      category: 'deuda',
+    },
+    {
+      description: 'Gas',
+      amount: 350,
+      dueDay: 22,
+      quincena: 'segunda' as QuincenaType,
+      category: 'servicios',
+    },
+    {
+      description: 'Netflix + Spotify',
+      amount: 290,
+      dueDay: 25,
+      quincena: 'segunda' as QuincenaType,
+      category: 'entretenimiento',
+    },
   ]
 
   const dailyTemplates = [
@@ -60,6 +264,9 @@ function buildHistoricalTransactions(): TransactionResponseDTO[] {
         year: y,
         isRecurring: true,
         isCC: false,
+        cardId: null,
+        eventId: null,
+        userId: null,
         receiptUrl: null,
         confirmedAt: pastIso,
         createdAt: pastIso,
@@ -82,6 +289,9 @@ function buildHistoricalTransactions(): TransactionResponseDTO[] {
         year: y,
         isRecurring: false,
         isCC: false,
+        cardId: null,
+        eventId: null,
+        userId: null,
         receiptUrl: null,
         confirmedAt: pastIso,
         createdAt: pastIso,
@@ -118,7 +328,9 @@ function buildSeedTransactions(): TransactionResponseDTO[] {
     dueDay: number,
     quincena: QuincenaType,
     isRecurring = true,
-    status: TransactionResponseDTO['status'] = 'pending'
+    status: TransactionResponseDTO['status'] = 'pending',
+    isCC = false,
+    cardId: string | null = null
   ): TransactionResponseDTO => ({
     id: uuid(),
     description,
@@ -131,7 +343,10 @@ function buildSeedTransactions(): TransactionResponseDTO[] {
     month: m,
     year: y,
     isRecurring,
-    isCC: false,
+    isCC,
+    cardId,
+    eventId: null,
+    userId: 'usr_admin_001',
     receiptUrl: null,
     confirmedAt: status === 'confirmed' ? iso() : null,
     createdAt: iso(),
@@ -144,22 +359,207 @@ function buildSeedTransactions(): TransactionResponseDTO[] {
     { ...base('Internet Telmex', 480, 8, 'primera'), category: 'servicios' },
     { ...base('Seguro Gastos Médicos', 1_200, 10, 'primera'), category: 'salud' },
     { ...base('Colegio', 3_200, 12, 'primera'), category: 'educacion' },
-    { ...base('Tarjeta BBVA', 2_400, 17, 'segunda', true, 'confirmed'), category: 'deuda' },
-    { ...base('Tarjeta Banamex', 1_800, 20, 'segunda'), category: 'deuda' },
+    {
+      ...base('Tarjeta BBVA', 2_400, 17, 'segunda', true, 'confirmed', true, 'card_001'),
+      category: 'deuda',
+    },
+    {
+      ...base('Tarjeta Banamex', 1_800, 20, 'segunda', true, 'pending', true, 'card_002'),
+      category: 'deuda',
+    },
     { ...base('Gas', 350, 22, 'segunda'), category: 'servicios' },
     { ...base('Netflix + Spotify', 290, 25, 'segunda'), category: 'entretenimiento' },
     // Daily expenses
     {
-      id: uuid(), description: 'Comida oficina', amount: 120,
-      type: 'daily', category: 'alimentacion', status: 'confirmed',
-      quincena: 'primera', dueDay: now.getDate(), month: m, year: y,
-      isRecurring: false, isCC: false, receiptUrl: null, confirmedAt: iso(), createdAt: iso(), updatedAt: iso(),
+      id: uuid(),
+      description: 'Comida oficina',
+      amount: 120,
+      type: 'daily',
+      category: 'alimentacion',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: now.getDate(),
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
     },
     {
-      id: uuid(), description: 'Uber', amount: 85,
-      type: 'daily', category: 'transporte', status: 'confirmed',
-      quincena: 'primera', dueDay: now.getDate(), month: m, year: y,
-      isRecurring: false, isCC: false, receiptUrl: null, confirmedAt: iso(), createdAt: iso(), updatedAt: iso(),
+      id: uuid(),
+      description: 'Compra con BBVA',
+      amount: 450,
+      type: 'daily',
+      category: 'alimentacion',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: now.getDate(),
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: true,
+      cardId: 'card_001',
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    {
+      id: uuid(),
+      description: 'Uber',
+      amount: 85,
+      type: 'daily',
+      category: 'transporte',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: now.getDate(),
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    // Extra daily seed transactions for QuickDailyList
+    {
+      id: uuid(),
+      description: 'Farmacia',
+      amount: 230,
+      type: 'daily',
+      category: 'salud',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: 3,
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    {
+      id: uuid(),
+      description: 'Supermercado',
+      amount: 620,
+      type: 'daily',
+      category: 'alimentacion',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: 6,
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    {
+      id: uuid(),
+      description: 'Gasolina',
+      amount: 700,
+      type: 'daily',
+      category: 'transporte',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: 9,
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    {
+      id: uuid(),
+      description: 'Cine',
+      amount: 180,
+      type: 'daily',
+      category: 'entretenimiento',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: 11,
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    {
+      id: uuid(),
+      description: 'Papelería',
+      amount: 95,
+      type: 'daily',
+      category: 'educacion',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: 13,
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
+    },
+    // Ana Garcia's contribution to the Picnic event
+    {
+      id: 'tx_evt_001',
+      description: 'Aporte Picnic de Verano',
+      amount: 75,
+      type: 'daily',
+      category: 'otros',
+      status: 'confirmed',
+      quincena: 'primera',
+      dueDay: now.getDate(),
+      month: m,
+      year: y,
+      isRecurring: false,
+      isCC: false,
+      cardId: null,
+      eventId: 'evt_001',
+      userId: 'usr_002',
+      receiptUrl: null,
+      confirmedAt: iso(),
+      createdAt: iso(),
+      updatedAt: iso(),
     },
   ]
 }
@@ -168,13 +568,17 @@ function computeBalance(filter: MonthFilter & { quincena?: QuincenaFilter }): Ba
   const now = new Date()
   const daysInMonth = getDaysInMonth(new Date(filter.year, filter.month - 1))
   const remainingDays = Math.max(1, daysInMonth - now.getDate())
-  const quincena: QuincenaType = (filter.quincena && filter.quincena !== 'mensual')
-    ? filter.quincena
-    : (now.getDate() <= 15 ? 'primera' : 'segunda')
+  const quincena: QuincenaType =
+    filter.quincena && filter.quincena !== 'mensual'
+      ? filter.quincena
+      : now.getDate() <= 15
+        ? 'primera'
+        : 'segunda'
   const isMensual = filter.quincena === 'mensual'
 
   const relevant = mockTransactions.filter(
-    (t) => t.month === filter.month && t.year === filter.year && (isMensual || t.quincena === quincena)
+    (t) =>
+      t.month === filter.month && t.year === filter.year && (isMensual || t.quincena === quincena)
   )
 
   const scheduled = relevant.filter((t) => t.type === 'scheduled')
@@ -211,39 +615,80 @@ function computeBalance(filter: MonthFilter & { quincena?: QuincenaFilter }): Ba
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const mockAuthService = {
-  // POST /api/v1/auth/login
-  async login(email: string, _password: string): Promise<AuthResponseDTO> {
+  async login(email: string, password: string): Promise<AuthResponseDTO> {
     await delay()
-    if (!email.includes('@')) throw new Error('Credenciales inválidas')
-    const firstName = email.split('@')[0]
+    const found = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase())
+    if (!found || found.password !== password) throw new Error('Credenciales inválidas')
+    if (found.status === 'blocked')
+      throw new Error('Tu cuenta ha sido bloqueada. Contacta al administrador.')
+    if (found.status === 'deleted') throw new Error('Esta cuenta ya no existe.')
     return {
       token: `mock_jwt_${uuid()}`,
       refreshToken: `mock_refresh_${uuid()}`,
       expiresIn: 3600,
       user: {
-        id: uuid(), email, name: firstName, firstName, lastName: 'Usuario',
-        currency: 'MXN', timezone: 'America/Mexico_City',
-        monthlyNotifications: false, createdAt: iso(),
+        id: found.id,
+        email: found.email,
+        name: found.name,
+        firstName: found.firstName,
+        lastName: found.lastName,
+        alias: found.alias,
+        currency: 'MXN',
+        timezone: 'America/Mexico_City',
+        monthlyNotifications: false,
+        role: found.role,
+        status: found.status,
+        createdAt: found.createdAt,
       },
     }
   },
 
-  // POST /api/v1/auth/register
-  async register(firstName: string, lastName: string, email: string, _password: string): Promise<AuthResponseDTO> {
+  async register(
+    firstName: string,
+    lastName: string,
+    email: string,
+    _password: string,
+    alias: string
+  ): Promise<AuthResponseDTO> {
     await delay()
+    const exists = mockUsers.some((u) => u.email.toLowerCase() === email.toLowerCase())
+    if (exists) throw new Error('Este correo ya está registrado.')
+    const aliasExists = mockUsers.some((u) => u.alias.toLowerCase() === alias.toLowerCase())
+    if (aliasExists) throw new Error('Este alias ya está en uso.')
+    const newUser: MockUser = {
+      id: `usr_${uuid()}`,
+      email,
+      name: `${firstName} ${lastName}`,
+      firstName,
+      lastName,
+      alias,
+      role: 'USER',
+      status: 'active',
+      password: _password,
+      createdAt: iso(),
+    }
+    mockUsers.push(newUser)
     return {
       token: `mock_jwt_${uuid()}`,
       refreshToken: `mock_refresh_${uuid()}`,
       expiresIn: 3600,
       user: {
-        id: uuid(), email, name: `${firstName} ${lastName}`, firstName, lastName,
-        currency: 'MXN', timezone: 'America/Mexico_City',
-        monthlyNotifications: false, createdAt: iso(),
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        alias: newUser.alias,
+        currency: 'MXN',
+        timezone: 'America/Mexico_City',
+        monthlyNotifications: false,
+        role: newUser.role,
+        status: newUser.status,
+        createdAt: newUser.createdAt,
       },
     }
   },
 
-  // POST /api/v1/auth/logout
   async logout(): Promise<void> {
     await delay(300)
   },
@@ -252,8 +697,9 @@ export const mockAuthService = {
 // ─── Transactions ─────────────────────────────────────────────────────────────
 
 export const mockTransactionService = {
-  // GET /api/v1/transactions?month=&year=&quincena=
-  async list(filter: MonthFilter & { quincena?: QuincenaFilter }): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
+  async list(
+    filter: MonthFilter & { quincena?: QuincenaFilter }
+  ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     await delay()
     const isMensual = filter.quincena === 'mensual'
     const data = mockTransactions.filter(
@@ -265,30 +711,40 @@ export const mockTransactionService = {
     return { data, total: data.length, page: 1, pageSize: 100, hasMore: false }
   },
 
-  // GET /api/v1/transactions/history?year=&type=&category=
   async listHistory(filters: {
     year: number
     type?: 'scheduled' | 'daily' | 'income' | 'all'
     category?: string
   }): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     await delay()
-    const data = mockTransactions.filter((t) => {
-      if (t.year !== filters.year) return false
-      if (filters.type && filters.type !== 'all' && t.type !== filters.type) return false
-      if (filters.category && filters.category !== 'all' && t.category !== filters.category) return false
-      return true
-    }).sort((a, b) => a.month - b.month || a.dueDay - b.dueDay)
+    const data = mockTransactions
+      .filter((t) => {
+        if (t.year !== filters.year) return false
+        if (filters.type && filters.type !== 'all' && t.type !== filters.type) return false
+        if (filters.category && filters.category !== 'all' && t.category !== filters.category)
+          return false
+        return true
+      })
+      .sort((a, b) => a.month - b.month || a.dueDay - b.dueDay)
     return { data, total: data.length, page: 1, pageSize: 500, hasMore: false }
   },
 
-  // POST /api/v1/transactions
-  async create(dto: CreateTransactionDTO): Promise<TransactionResponseDTO> {
+  async create(
+    dto: CreateTransactionDTO & { idempotencyKey?: string }
+  ): Promise<TransactionResponseDTO> {
+    if (dto.idempotencyKey) {
+      const cached = getIdempotentResult<TransactionResponseDTO>(dto.idempotencyKey)
+      if (cached) return cached
+    }
     await delay()
     const autoConfirm = dto.type === 'daily' || dto.type === 'income'
     const tx: TransactionResponseDTO = {
       id: uuid(),
       ...dto,
       isCC: dto.isCC ?? false,
+      cardId: dto.cardId ?? null,
+      eventId: dto.eventId ?? null,
+      userId: dto.userId ?? null,
       status: autoConfirm ? 'confirmed' : 'pending',
       receiptUrl: null,
       confirmedAt: autoConfirm ? iso() : null,
@@ -297,10 +753,10 @@ export const mockTransactionService = {
     }
     if (dto.type === 'income') mockBalance += dto.amount
     mockTransactions.push(tx)
+    if (dto.idempotencyKey) setIdempotentResult(dto.idempotencyKey, tx)
     return tx
   },
 
-  // PATCH /api/v1/transactions/:id/confirm
   async confirm(dto: ConfirmTransactionDTO): Promise<TransactionResponseDTO> {
     await delay()
     const tx = mockTransactions.find((t) => t.id === dto.transactionId)
@@ -311,23 +767,31 @@ export const mockTransactionService = {
     return { ...tx }
   },
 
-  // PUT /api/v1/transactions/:id
-  async update(id: string, dto: Partial<TransactionResponseDTO>): Promise<TransactionResponseDTO> {
+  async update(
+    id: string,
+    dto: Partial<TransactionResponseDTO> & { idempotencyKey?: string }
+  ): Promise<TransactionResponseDTO> {
+    const ikey = dto.idempotencyKey
+    if (ikey) {
+      const cached = getIdempotentResult<TransactionResponseDTO>(ikey)
+      if (cached) return cached
+    }
     await delay()
     const tx = mockTransactions.find((t) => t.id === id)
     if (!tx) throw new Error('Transacción no encontrada')
-    Object.assign(tx, dto, { updatedAt: iso() })
-    return { ...tx }
+    const { idempotencyKey: _k, ...rest } = dto
+    Object.assign(tx, rest, { updatedAt: iso() })
+    const result = { ...tx }
+    if (ikey) setIdempotentResult(ikey, result)
+    return result
   },
 
-  // DELETE /api/v1/transactions/:id
   async remove(id: string): Promise<void> {
     await delay()
     mockTransactions = mockTransactions.filter((t) => t.id !== id)
     receiptStore.delete(id)
   },
 
-  // POST /api/v1/transactions/:id/receipt  (multipart/form-data)
   async uploadReceipt(id: string, file: File): Promise<TransactionResponseDTO> {
     await delay(600)
     const tx = mockTransactions.find((t) => t.id === id)
@@ -345,16 +809,74 @@ export const mockTransactionService = {
   },
 }
 
+// ─── Cards ────────────────────────────────────────────────────────────────────
+
+export const mockCardService = {
+  async listCards(userId: string): Promise<CardDTO[]> {
+    await delay(400)
+    return mockCards.filter((c) => c.userId === userId)
+  },
+
+  async createCard(userId: string, dto: CreateCardDTO): Promise<CardDTO> {
+    await delay()
+    const card: CardDTO = { id: `card_${uuid()}`, userId, ...dto, createdAt: iso() }
+    mockCards.push(card)
+    return card
+  },
+
+  async deleteCard(id: string): Promise<void> {
+    await delay(400)
+    const idx = mockCards.findIndex((c) => c.id === id)
+    if (idx === -1) throw new Error('Tarjeta no encontrada')
+    mockCards.splice(idx, 1)
+  },
+
+  async updateCard(id: string, dto: Partial<CreateCardDTO>): Promise<CardDTO> {
+    await delay(400)
+    const card = mockCards.find((c) => c.id === id)
+    if (!card) throw new Error('Tarjeta no encontrada')
+    Object.assign(card, dto)
+    return { ...card }
+  },
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+export const mockAdminService = {
+  async listUsers(): Promise<AdminUserDTO[]> {
+    await delay()
+    return mockUsers.map(({ password: _p, ...rest }) => rest)
+  },
+
+  async updateRole(dto: UpdateUserRoleDTO): Promise<AdminUserDTO> {
+    await delay()
+    const user = mockUsers.find((u) => u.id === dto.userId)
+    if (!user) throw new Error('Usuario no encontrado')
+    user.role = dto.role
+    const { password: _p, ...rest } = user
+    return rest
+  },
+
+  async updateStatus(dto: UpdateUserStatusDTO): Promise<AdminUserDTO> {
+    await delay()
+    const user = mockUsers.find((u) => u.id === dto.userId)
+    if (!user) throw new Error('Usuario no encontrado')
+    user.status = dto.status
+    const { password: _p, ...rest } = user
+    return rest
+  },
+}
+
 // ─── Balance ──────────────────────────────────────────────────────────────────
 
 export const mockBalanceService = {
-  // GET /api/v1/balance?month=&year=&quincena=
-  async getSummary(filter: MonthFilter & { quincena?: QuincenaFilter }): Promise<BalanceSummaryDTO> {
+  async getSummary(
+    filter: MonthFilter & { quincena?: QuincenaFilter }
+  ): Promise<BalanceSummaryDTO> {
     await delay()
     return computeBalance(filter)
   },
 
-  // POST /api/v1/balance/adjust
   async adjust(dto: AdjustBalanceDTO): Promise<BalanceSummaryDTO> {
     await delay()
     mockBalance = dto.newBalance
@@ -362,7 +884,37 @@ export const mockBalanceService = {
     return computeBalance({ month: now.getMonth() + 1, year: now.getFullYear() })
   },
 
-  // POST /api/v1/balance/income
+  async getMonthlyTrend(months = 6): Promise<MonthlyTrendDTO[]> {
+    await delay(400)
+    const lang =
+      typeof localStorage !== 'undefined' ? (localStorage.getItem('finance_lang') ?? 'es') : 'es'
+    const now = new Date()
+    const result: MonthlyTrendDTO[] = []
+    for (let offset = months - 1; offset >= 0; offset--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - offset, 1)
+      const m = d.getMonth() + 1
+      const y = d.getFullYear()
+      const monthLabel = new Intl.DateTimeFormat(lang, { month: 'short' }).format(d)
+      const relevant = mockTransactions.filter(
+        (t) => t.month === m && t.year === y && t.status === 'confirmed'
+      )
+      const incomeSum = relevant
+        .filter((t) => t.type === 'income')
+        .reduce((s, t) => s + t.amount, 0)
+      const expensesSum = relevant
+        .filter((t) => t.type === 'scheduled' || t.type === 'daily')
+        .reduce((s, t) => s + t.amount, 0)
+      result.push({
+        month: m,
+        year: y,
+        monthLabel: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+        income: incomeSum > 0 ? incomeSum : 12_000,
+        expenses: expensesSum,
+      })
+    }
+    return result
+  },
+
   async addIncome(dto: { description: string; amount: number }): Promise<BalanceSummaryDTO> {
     await delay()
     mockBalance += dto.amount
@@ -383,11 +935,152 @@ export const mockBalanceService = {
       year: y,
       isRecurring: false,
       isCC: false,
+      cardId: null,
+      eventId: null,
+      userId: 'usr_admin_001',
       receiptUrl: null,
       confirmedAt: iso(),
       createdAt: iso(),
       updatedAt: iso(),
     })
     return computeBalance({ month: m, year: y })
+  },
+}
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+
+export const mockEventService = {
+  async listEvents(userId: string): Promise<BudgetEventDTO[]> {
+    await delay(400)
+    return mockEvents.filter(
+      (e) => e.createdBy === userId || e.participants.some((p) => p.userId === userId)
+    )
+  },
+
+  async getEvent(id: string): Promise<BudgetEventDTO> {
+    await delay(400)
+    const event = mockEvents.find((e) => e.id === id)
+    if (!event) throw new Error('Evento no encontrado')
+    return {
+      ...event,
+      participants: [...event.participants],
+      shoppingItems: [...event.shoppingItems],
+    }
+  },
+
+  async createEvent(dto: CreateEventDTO, creatorUserId: string): Promise<BudgetEventDTO> {
+    await delay()
+    const event: BudgetEventDTO = {
+      id: `evt_${uuid()}`,
+      ...dto,
+      createdBy: creatorUserId,
+      status: 'ACTIVE',
+      participants: [],
+      shoppingItems: [],
+      createdAt: iso(),
+      updatedAt: iso(),
+    }
+    mockEvents.push(event)
+    return { ...event }
+  },
+
+  async inviteParticipant(dto: InviteParticipantDTO): Promise<BudgetEventDTO> {
+    await delay()
+    const event = mockEvents.find((e) => e.id === dto.eventId)
+    if (!event) throw new Error('Evento no encontrado')
+    const user = mockUsers.find((u) => u.alias.toLowerCase() === dto.alias.toLowerCase())
+    if (!user) throw new Error(`No se encontró ningún usuario con alias ${dto.alias}`)
+
+    const existing = event.participants.find((p) => p.userId === user.id)
+    if (existing) {
+      if (existing.status === 'CONFIRMED')
+        throw new Error('Este participante ya confirmó su asistencia')
+      // re-invite DECLINED participant
+      existing.status = 'PENDING_CONFIRMATION'
+      existing.joinedAt = iso()
+      existing.respondedAt = undefined
+    } else {
+      const participant: EventParticipant = {
+        userId: user.id,
+        alias: user.alias,
+        assignedPct: dto.assignedPct,
+        status: 'PENDING_CONFIRMATION',
+        joinedAt: iso(),
+      }
+      event.participants.push(participant)
+    }
+    event.updatedAt = iso()
+    return {
+      ...event,
+      participants: [...event.participants],
+      shoppingItems: [...event.shoppingItems],
+    }
+  },
+
+  async respondInvitation(dto: RespondInvitationDTO, userId: string): Promise<BudgetEventDTO> {
+    await delay()
+    const event = mockEvents.find((e) => e.id === dto.eventId)
+    if (!event) throw new Error('Evento no encontrado')
+    const participant = event.participants.find((p) => p.userId === userId)
+    if (!participant) throw new Error('No estás invitado a este evento')
+    if (participant.status === 'CONFIRMED') throw new Error('Ya confirmaste tu asistencia')
+    participant.status = dto.status
+    participant.respondedAt = iso()
+    event.updatedAt = iso()
+    return {
+      ...event,
+      participants: [...event.participants],
+      shoppingItems: [...event.shoppingItems],
+    }
+  },
+
+  async addShoppingItem(dto: AddShoppingItemDTO): Promise<BudgetEventDTO> {
+    await delay()
+    const event = mockEvents.find((e) => e.id === dto.eventId)
+    if (!event) throw new Error('Evento no encontrado')
+    const item: ShoppingItem = {
+      id: `si_${uuid()}`,
+      name: dto.name,
+      estimatedCost: dto.estimatedCost,
+      bought: false,
+      assignedTo: dto.assignedTo,
+    }
+    event.shoppingItems.push(item)
+    event.updatedAt = iso()
+    return {
+      ...event,
+      participants: [...event.participants],
+      shoppingItems: [...event.shoppingItems],
+    }
+  },
+
+  async toggleShoppingItem(dto: ToggleShoppingItemDTO, userId: string): Promise<BudgetEventDTO> {
+    await delay()
+    const event = mockEvents.find((e) => e.id === dto.eventId)
+    if (!event) throw new Error('Evento no encontrado')
+    const item = event.shoppingItems.find((i) => i.id === dto.itemId)
+    if (!item) throw new Error('Artículo no encontrado')
+    item.bought = dto.bought
+    item.boughtBy = dto.bought ? userId : undefined
+    item.boughtAt = dto.bought ? iso() : undefined
+    event.updatedAt = iso()
+    return {
+      ...event,
+      participants: [...event.participants],
+      shoppingItems: [...event.shoppingItems],
+    }
+  },
+
+  async cancelEvent(id: string): Promise<void> {
+    await delay()
+    const event = mockEvents.find((e) => e.id === id)
+    if (!event) throw new Error('Evento no encontrado')
+    event.status = 'CANCELLED'
+    event.updatedAt = iso()
+  },
+
+  async getLinkedTransactions(eventId: string): Promise<TransactionResponseDTO[]> {
+    await delay(300)
+    return mockTransactions.filter((t) => t.eventId === eventId)
   },
 }

@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Projects\\\\finance-project\\\\finance-pwa\" -Force)",
+      "Bash(Select-Object -Property Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(npx husky *)",
+      "Bash(git update-index *)",
+      "Bash(git add *)",
+      "Bash(npx prettier *)",
+      "Bash(node -e \"const p=JSON.parse\\(require\\('fs'\\).readFileSync\\('package.json','utf8'\\)\\); console.log\\(JSON.stringify\\(p['lint-staged'],null,2\\)\\)\")",
+      "Bash(node -e \"require\\('prettier-plugin-tailwindcss'\\); console.log\\('prettier-plugin-tailwindcss OK'\\)\")",
+      "Bash(npx vite *)",
+      "Bash(Get-ChildItem \"D:\\\\Projects\\\\Projects\\\\finance-project\\\\finance-pwa\\\\src\" -Recurse -Filter \"*.tsx\" -File)",
+      "Bash(Select-Object -First 20 FullName)"
     ]
   }
 }

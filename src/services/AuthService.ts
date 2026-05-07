@@ -16,6 +16,9 @@ class AuthService extends BaseApiService {
       res = await this.post<AuthResponseDTO, LoginRequestDTO>('/auth/login', dto)
     }
 
+    if (res.user.status === 'blocked')
+      throw new Error('Tu cuenta ha sido bloqueada. Contacta al administrador.')
+    if (res.user.status === 'deleted') throw new Error('Esta cuenta ya no existe.')
     setStoredToken(res.token, res.refreshToken)
     return { user: res.user, token: res.token }
   }
@@ -24,7 +27,13 @@ class AuthService extends BaseApiService {
     let res: AuthResponseDTO
 
     if (USE_MOCK) {
-      res = await mockAuthService.register(dto.firstName, dto.lastName, dto.email, dto.password)
+      res = await mockAuthService.register(
+        dto.firstName,
+        dto.lastName,
+        dto.email,
+        dto.password,
+        dto.alias
+      )
     } else {
       // POST /api/v1/auth/register
       res = await this.post<AuthResponseDTO, RegisterRequestDTO>('/auth/register', dto)

@@ -24,7 +24,13 @@ function applyTheme(theme: 'dark' | 'light' | undefined) {
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'SET_USER':
-      return { ...state, user: action.user, token: action.token, isAuthenticated: true, isLoading: false }
+      return {
+        ...state,
+        user: action.user,
+        token: action.token,
+        isAuthenticated: true,
+        isLoading: false,
+      }
     case 'UPDATE_USER':
       return { ...state, user: action.user }
     case 'LOGOUT':
@@ -36,7 +42,13 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>
-  register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>
+  register: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    alias: string
+  ) => Promise<void>
   logout: () => Promise<void>
   updateUser: (updates: Partial<User>) => void
 }
@@ -75,8 +87,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_USER', user, token })
   }
 
-  const register = async (firstName: string, lastName: string, email: string, password: string) => {
-    const { user, token } = await authService.register({ firstName, lastName, email, password, confirmPassword: password })
+  const register = async (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    alias: string
+  ) => {
+    const { user, token } = await authService.register({
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword: password,
+      alias,
+    })
     i18n.changeLanguage(user.language ?? 'es')
     applyTheme(user.theme)
     localStorage.setItem('finance_user', JSON.stringify(user))
@@ -98,7 +123,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'UPDATE_USER', user: updated })
   }
 
-  return <AuthContext.Provider value={{ ...state, login, register, logout, updateUser }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ ...state, login, register, logout, updateUser }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

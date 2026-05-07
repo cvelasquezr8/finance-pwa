@@ -1,12 +1,23 @@
 import { z } from 'zod'
 
-const categoryEnum = z.enum(['vivienda', 'servicios', 'alimentacion', 'transporte', 'salud', 'entretenimiento', 'educacion', 'deuda', 'otros'])
+const categoryEnum = z.enum([
+  'vivienda',
+  'servicios',
+  'alimentacion',
+  'transporte',
+  'salud',
+  'entretenimiento',
+  'educacion',
+  'deuda',
+  'otros',
+])
 
 export const dailyExpenseSchema = z.object({
   description: z.string().min(2, 'Mínimo 2 caracteres'),
   amount: z.coerce.number().positive('Debe ser mayor a 0'),
   category: categoryEnum,
   isCC: z.boolean().default(false),
+  cardId: z.string().nullable().optional(),
 })
 
 export const scheduledExpenseSchema = z.object({
@@ -17,6 +28,7 @@ export const scheduledExpenseSchema = z.object({
   quincena: z.enum(['primera', 'segunda']),
   isRecurring: z.boolean(),
   isCC: z.boolean().default(false),
+  cardId: z.string().nullable().optional(),
 })
 
 // Unified transaction schema: Ingreso or Egreso (daily)
@@ -26,6 +38,8 @@ export const addTransactionSchema = z.object({
   amount: z.coerce.number().positive('Debe ser mayor a 0'),
   category: categoryEnum.optional(),
   isCC: z.boolean().default(false),
+  cardId: z.string().nullable().optional(),
+  eventId: z.string().nullable().optional(),
 })
 
 export const adjustBalanceSchema = z.object({

@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'Finance Manager',
         short_name: 'FinanceApp',
         description: 'Personal finance management with bi-weekly budgeting',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#1c1917',
+        background_color: '#1c1917',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

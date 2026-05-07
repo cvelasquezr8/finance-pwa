@@ -4,14 +4,14 @@ Personal finance app with bi-weekly (quincena) budgeting, built with Vite + Reac
 
 ## Stack
 
-| Layer | Tech |
-|---|---|
-| UI | React 18 + TypeScript |
-| Styling | Tailwind CSS + shadcn/ui primitives |
-| Forms | React Hook Form + Zod |
-| HTTP | Axios with JWT interceptors |
-| PWA | vite-plugin-pwa (Workbox) |
-| Architecture | Domain-Driven Design (DDD) |
+| Layer        | Tech                                |
+| ------------ | ----------------------------------- |
+| UI           | React 18 + TypeScript               |
+| Styling      | Tailwind CSS + shadcn/ui primitives |
+| Forms        | React Hook Form + Zod               |
+| HTTP         | Axios with JWT interceptors         |
+| PWA          | vite-plugin-pwa (Workbox)           |
+| Architecture | Domain-Driven Design (DDD)          |
 
 ---
 
@@ -84,11 +84,11 @@ POST   /api/v1/balance/adjust
 
 ## Balance Projections
 
-| Metric | Formula |
-|---|---|
+| Metric               | Formula                                                   |
+| -------------------- | --------------------------------------------------------- |
 | **Saldo Proyectado** | `currentBalance + expectedIncome − totalPendingScheduled` |
-| **Gasto Diario** | `projectedBalance / remainingDaysInMonth` |
-| **Deuda Total** | Sum of all `category = 'deuda'` transactions in the month |
+| **Gasto Diario**     | `projectedBalance / remainingDaysInMonth`                 |
+| **Deuda Total**      | Sum of all `category = 'deuda'` transactions in the month |
 
 ---
 

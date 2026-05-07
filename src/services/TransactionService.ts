@@ -8,8 +8,10 @@ import type {
   BalanceSummaryDTO,
   AdjustBalanceDTO,
   PaginatedResponseDTO,
+  MonthlyTrendDTO,
 } from '@/core/dtos'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
+import { generateKey } from '@/lib/idempotency'
 
 const USE_MOCK = true
 
@@ -23,13 +25,16 @@ class TransactionService extends BaseApiService {
   }
 
   async create(dto: CreateTransactionDTO): Promise<TransactionResponseDTO> {
-    if (USE_MOCK) return mockTransactionService.create(dto)
-    // POST /api/v1/transactions
-    // Daily expenses are auto-confirmed (already spent); scheduled start as pending
-    return this.post('/transactions', {
-      ...dto,
-      status: dto.type === 'daily' ? 'confirmed' : 'pending',
-    })
+    const key = generateKey()
+    if (USE_MOCK) return mockTransactionService.create({ ...dto, idempotencyKey: key })
+    return this.post(
+      '/transactions',
+      {
+        ...dto,
+        status: dto.type === 'daily' ? 'confirmed' : 'pending',
+      },
+      { headers: { 'x-idempotency-key': key } }
+    )
   }
 
   async confirm(dto: ConfirmTransactionDTO): Promise<TransactionResponseDTO> {
@@ -55,9 +60,9 @@ class TransactionService extends BaseApiService {
   }
 
   async update(id: string, dto: UpdateTransactionDTO): Promise<TransactionResponseDTO> {
-    if (USE_MOCK) return mockTransactionService.update(id, dto)
-    // PUT /api/v1/transactions/:id
-    return this.put(`/transactions/${id}`, dto)
+    const key = generateKey()
+    if (USE_MOCK) return mockTransactionService.update(id, { ...dto, idempotencyKey: key })
+    return this.put(`/transactions/${id}`, dto, { headers: { 'x-idempotency-key': key } })
   }
 
   async uploadReceipt(id: string, file: File): Promise<TransactionResponseDTO> {
@@ -90,6 +95,11 @@ class BalanceService extends BaseApiService {
     if (USE_MOCK) return mockBalanceService.addIncome(dto)
     // POST /api/v1/balance/income
     return this.post('/balance/income', dto)
+  }
+
+  async getMonthlyTrend(months = 6): Promise<MonthlyTrendDTO[]> {
+    if (USE_MOCK) return mockBalanceService.getMonthlyTrend(months)
+    return this.get('/balance/trend', { params: { months } })
   }
 }
 

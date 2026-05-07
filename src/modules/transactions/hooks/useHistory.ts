@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import type { TransactionResponseDTO, UpdateTransactionDTO } from '@/core/dtos'
 import { transactionService } from '@/services/TransactionService'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/lib/toast'
 import { MONTHS } from '@/lib/utils'
 
 export interface HistoryFilters {
@@ -38,15 +38,24 @@ type Action =
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'LOADING': return { ...state, isLoading: true }
-    case 'SUCCESS': return { transactions: action.data, isLoading: false }
-    case 'UPDATE_ONE': return { ...state, transactions: state.transactions.map((t) => t.id === action.tx.id ? action.tx : t) }
-    case 'REMOVE_ONE': return { ...state, transactions: state.transactions.filter((t) => t.id !== action.id) }
+    case 'LOADING':
+      return { ...state, isLoading: true }
+    case 'SUCCESS':
+      return { transactions: action.data, isLoading: false }
+    case 'UPDATE_ONE':
+      return {
+        ...state,
+        transactions: state.transactions.map((t) => (t.id === action.tx.id ? action.tx : t)),
+      }
+    case 'REMOVE_ONE':
+      return { ...state, transactions: state.transactions.filter((t) => t.id !== action.id) }
   }
 }
 
 // Converts month+year to a single comparable integer YYYYMM
-function toKey(year: number, month: number) { return year * 100 + month }
+function toKey(year: number, month: number) {
+  return year * 100 + month
+}
 
 export function useHistory(filters: HistoryFilters) {
   const [state, dispatch] = useReducer(reducer, { transactions: [], isLoading: true })
@@ -65,12 +74,14 @@ export function useHistory(filters: HistoryFilters) {
       )
 
       const fromKey = toKey(filters.fromYear, filters.fromMonth)
-      const toKey2   = toKey(filters.toYear, filters.toMonth)
+      const toKey2 = toKey(filters.toYear, filters.toMonth)
 
-      const all = results.flatMap((r) => r.data).filter((t) => {
-        const k = toKey(t.year, t.month)
-        return k >= fromKey && k <= toKey2
-      })
+      const all = results
+        .flatMap((r) => r.data)
+        .filter((t) => {
+          const k = toKey(t.year, t.month)
+          return k >= fromKey && k <= toKey2
+        })
 
       all.sort((a, b) => toKey(a.year, a.month) - toKey(b.year, b.month) || a.dueDay - b.dueDay)
       dispatch({ type: 'SUCCESS', data: all })
@@ -78,9 +89,18 @@ export function useHistory(filters: HistoryFilters) {
       toast({ title: 'Error al cargar el historial', variant: 'destructive' })
       dispatch({ type: 'SUCCESS', data: [] })
     }
-  }, [filters.fromMonth, filters.fromYear, filters.toMonth, filters.toYear, filters.type, filters.category])
+  }, [
+    filters.fromMonth,
+    filters.fromYear,
+    filters.toMonth,
+    filters.toYear,
+    filters.type,
+    filters.category,
+  ])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => {
+    fetch()
+  }, [fetch])
 
   const updateTransaction = async (id: string, dto: UpdateTransactionDTO) => {
     try {
@@ -109,20 +129,33 @@ export function useHistory(filters: HistoryFilters) {
     const key = toKey(t.year, t.month)
     if (!monthMap.has(key)) {
       monthMap.set(key, {
-        month: t.month, year: t.year,
+        month: t.month,
+        year: t.year,
         label: `${MONTHS[t.month - 1]} ${t.year}`,
-        scheduled: [], daily: [], income: [],
-        totalScheduled: 0, totalDaily: 0, totalIncome: 0,
+        scheduled: [],
+        daily: [],
+        income: [],
+        totalScheduled: 0,
+        totalDaily: 0,
+        totalIncome: 0,
       })
     }
     const g = monthMap.get(key)!
-    if (t.type === 'scheduled') { g.scheduled.push(t); g.totalScheduled += t.amount }
-    else if (t.type === 'daily')  { g.daily.push(t);    g.totalDaily    += t.amount }
-    else if (t.type === 'income') { g.income.push(t);   g.totalIncome   += t.amount }
+    if (t.type === 'scheduled') {
+      g.scheduled.push(t)
+      g.totalScheduled += t.amount
+    } else if (t.type === 'daily') {
+      g.daily.push(t)
+      g.totalDaily += t.amount
+    } else if (t.type === 'income') {
+      g.income.push(t)
+      g.totalIncome += t.amount
+    }
   })
 
-  const grouped = Array.from(monthMap.values())
-    .sort((a, b) => toKey(a.year, a.month) - toKey(b.year, b.month))
+  const grouped = Array.from(monthMap.values()).sort(
+    (a, b) => toKey(a.year, a.month) - toKey(b.year, b.month)
+  )
 
   return { ...state, grouped, updateTransaction, removeTransaction, refetch: fetch }
 }

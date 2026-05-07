@@ -11,7 +11,11 @@ interface Props {
 }
 
 function StatCard({
-  title, value, subtitle, icon: Icon, trend,
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  trend,
 }: {
   title: string
   value: string
@@ -23,14 +27,26 @@ function StatCard({
     <Card className="animate-fade-in">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className={cn('rounded-md p-1.5',
-          trend === 'up'   ? 'bg-emerald-500/15 dark:bg-emerald-500/30' :
-          trend === 'down' ? 'bg-red-500/15 dark:bg-red-500/30' :
-                             'bg-primary/15 dark:bg-primary/30')}>
-          <Icon className={cn('h-4 w-4',
-            trend === 'up'   ? 'text-emerald-500 dark:text-emerald-400' :
-            trend === 'down' ? 'text-red-500 dark:text-red-400' :
-                               'text-primary')} />
+        <div
+          className={cn(
+            'rounded-md p-1.5',
+            trend === 'up'
+              ? 'bg-emerald-500/15 dark:bg-emerald-500/30'
+              : trend === 'down'
+                ? 'bg-red-500/15 dark:bg-red-500/30'
+                : 'bg-primary/15 dark:bg-primary/30'
+          )}
+        >
+          <Icon
+            className={cn(
+              'h-4 w-4',
+              trend === 'up'
+                ? 'text-emerald-500 dark:text-emerald-400'
+                : trend === 'down'
+                  ? 'text-red-500 dark:text-red-400'
+                  : 'text-primary'
+            )}
+          />
         </div>
       </CardHeader>
       <CardContent>
@@ -44,8 +60,12 @@ function StatCard({
 function SkeletonCard() {
   return (
     <Card>
-      <CardHeader className="pb-2"><div className="h-4 w-24 rounded bg-muted animate-pulse" /></CardHeader>
-      <CardContent><div className="h-8 w-32 rounded bg-muted animate-pulse" /></CardContent>
+      <CardHeader className="pb-2">
+        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+      </CardContent>
     </Card>
   )
 }
@@ -56,7 +76,9 @@ export function SummaryCards({ summary, isLoading }: Props) {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
       </div>
     )
   }

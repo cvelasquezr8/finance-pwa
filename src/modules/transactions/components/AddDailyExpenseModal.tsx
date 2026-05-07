@@ -7,20 +7,44 @@ import { dailyExpenseSchema, type DailyExpenseFormValues } from '../schemas/tran
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { CATEGORY_LABELS } from '@/lib/utils'
 import type { MonthFilter, QuincenaType } from '@/core/types'
 
 interface Props {
   filter: MonthFilter & { quincena: QuincenaType }
-  onAdd: (description: string, amount: number, category: DailyExpenseFormValues['category'], filter: MonthFilter & { quincena: QuincenaType }) => Promise<void>
+  onAdd: (
+    description: string,
+    amount: number,
+    category: DailyExpenseFormValues['category'],
+    filter: MonthFilter & { quincena: QuincenaType }
+  ) => Promise<void>
 }
 
 export function AddDailyExpenseModal({ filter, onAdd }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const { register, handleSubmit, setValue, reset, formState: { errors, isSubmitting } } = useForm<DailyExpenseFormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<DailyExpenseFormValues>({
     resolver: zodResolver(dailyExpenseSchema),
     defaultValues: { category: 'otros' },
   })
@@ -46,29 +70,56 @@ export function AddDailyExpenseModal({ filter, onAdd }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="description">{t('addDaily.description')}</Label>
-            <Input id="description" placeholder={t('addDaily.descriptionPlaceholder')} {...register('description')} />
-            {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+            <Input
+              id="description"
+              placeholder={t('addDaily.descriptionPlaceholder')}
+              {...register('description')}
+            />
+            {errors.description && (
+              <p className="text-xs text-destructive">{errors.description.message}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="amount">{t('addDaily.amount')}</Label>
-            <Input id="amount" type="number" step="0.01" placeholder="0.00" {...register('amount')} />
+            <Input
+              id="amount"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              {...register('amount')}
+            />
             {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>{t('addDaily.category')}</Label>
-            <Select defaultValue="otros" onValueChange={(v) => setValue('category', v as DailyExpenseFormValues['category'])}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              defaultValue="otros"
+              onValueChange={(v) => setValue('category', v as DailyExpenseFormValues['category'])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {Object.keys(CATEGORY_LABELS).map((k) => (
-                  <SelectItem key={k} value={k}>{t(`categories.${k}`)}</SelectItem>
+                  <SelectItem key={k} value={k}>
+                    {t(`categories.${k}`)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('addDaily.cancel')}</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              {t('addDaily.cancel')}
+            </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('addDaily.saving')}</> : t('addDaily.add')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('addDaily.saving')}
+                </>
+              ) : (
+                t('addDaily.add')
+              )}
             </Button>
           </DialogFooter>
         </form>

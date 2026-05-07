@@ -1,4 +1,16 @@
-import type { TransactionCategory, TransactionType, QuincenaType, TransactionStatus } from '@/core/types'
+import type {
+  TransactionCategory,
+  TransactionType,
+  QuincenaType,
+  TransactionStatus,
+  UserRole,
+  UserStatus,
+  CardType,
+  EventStatus,
+  ParticipantStatus,
+  EventParticipant,
+  ShoppingItem,
+} from '@/core/types'
 
 // --- Auth DTOs ---
 
@@ -15,6 +27,7 @@ export interface RegisterRequestDTO {
   email: string
   password: string
   confirmPassword: string
+  alias: string
 }
 
 export interface AuthResponseDTO {
@@ -33,6 +46,9 @@ export interface AuthResponseDTO {
     currency: string
     timezone: string
     monthlyNotifications: boolean
+    role: UserRole
+    status: UserStatus
+    alias: string
     createdAt: string
   }
 }
@@ -50,6 +66,9 @@ export interface CreateTransactionDTO {
   year: number
   isRecurring: boolean
   isCC: boolean
+  cardId?: string | null
+  eventId?: string | null
+  userId?: string | null
 }
 
 export interface UpdateTransactionDTO extends Partial<CreateTransactionDTO> {
@@ -69,6 +88,9 @@ export interface TransactionResponseDTO {
   year: number
   isRecurring: boolean
   isCC: boolean
+  cardId: string | null
+  eventId: string | null
+  userId: string | null
   receiptUrl: string | null
   confirmedAt: string | null
   createdAt: string
@@ -117,3 +139,104 @@ export interface ApiErrorDTO {
   message: string
   details?: Record<string, string[]>
 }
+
+// --- Card DTOs ---
+
+export interface CardDTO {
+  id: string
+  userId: string
+  name: string
+  lastFour: string
+  type: CardType
+  createdAt: string
+}
+
+export interface CreateCardDTO {
+  name: string
+  lastFour: string
+  type: CardType
+}
+
+// --- Admin DTOs ---
+
+export interface AdminUserDTO {
+  id: string
+  email: string
+  name: string
+  firstName: string
+  lastName: string
+  alias: string
+  role: UserRole
+  status: UserStatus
+  createdAt: string
+}
+
+export interface UpdateUserRoleDTO {
+  userId: string
+  role: UserRole
+}
+
+export interface UpdateUserStatusDTO {
+  userId: string
+  status: UserStatus
+}
+
+// --- Event DTOs ---
+
+export interface BudgetEventDTO {
+  id: string
+  title: string
+  description?: string
+  goalAmount: number
+  deadline?: string
+  createdBy: string
+  status: EventStatus
+  participants: EventParticipant[]
+  shoppingItems: ShoppingItem[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateEventDTO {
+  title: string
+  description?: string
+  goalAmount: number
+  deadline?: string
+}
+
+export interface InviteParticipantDTO {
+  eventId: string
+  alias: string
+  assignedPct: number
+}
+
+export interface RespondInvitationDTO {
+  eventId: string
+  status: 'CONFIRMED' | 'DECLINED'
+}
+
+export interface AddShoppingItemDTO {
+  eventId: string
+  name: string
+  estimatedCost?: number
+  assignedTo?: string
+}
+
+export interface ToggleShoppingItemDTO {
+  eventId: string
+  itemId: string
+  bought: boolean
+}
+
+// --- Chart DTOs ---
+
+export interface MonthlyTrendDTO {
+  month: number
+  year: number
+  monthLabel: string
+  income: number
+  expenses: number
+}
+
+// re-export event types for convenience
+export type { EventStatus, ParticipantStatus }

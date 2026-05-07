@@ -51,17 +51,29 @@ export abstract class BaseApiService {
     return res.data
   }
 
-  protected async post<T, B = unknown>(url: string, body: B, config?: AxiosRequestConfig): Promise<T> {
+  protected async post<T, B = unknown>(
+    url: string,
+    body: B,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const res: AxiosResponse<T> = await this.http.post(url, body, config)
     return res.data
   }
 
-  protected async put<T, B = unknown>(url: string, body: B, config?: AxiosRequestConfig): Promise<T> {
+  protected async put<T, B = unknown>(
+    url: string,
+    body: B,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const res: AxiosResponse<T> = await this.http.put(url, body, config)
     return res.data
   }
 
-  protected async patch<T, B = unknown>(url: string, body: B, config?: AxiosRequestConfig): Promise<T> {
+  protected async patch<T, B = unknown>(
+    url: string,
+    body: B,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const res: AxiosResponse<T> = await this.http.patch(url, body, config)
     return res.data
   }

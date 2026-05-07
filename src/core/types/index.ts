@@ -25,10 +25,10 @@ export interface Transaction {
   status: TransactionStatus
   quincena: QuincenaType
   dueDay: number // Day of month (1-31)
-  month: number  // 1-12
+  month: number // 1-12
   year: number
   isRecurring: boolean
-  isCC: boolean  // Credit card — does not affect bank balance
+  isCC: boolean // Credit card — does not affect bank balance
   confirmedAt?: string // ISO date
   createdAt: string
   updatedAt: string
@@ -55,6 +55,20 @@ export interface MonthFilter {
   year: number
 }
 
+export type UserRole = 'ADMIN' | 'USER'
+export type UserStatus = 'active' | 'blocked' | 'deleted'
+
+export type CardType = 'CREDIT' | 'DEBIT'
+
+export interface Card {
+  id: string
+  userId: string
+  name: string
+  lastFour: string
+  type: CardType
+  createdAt: string
+}
+
 export interface User {
   id: string
   email: string
@@ -70,6 +84,9 @@ export interface User {
   avatarUrl?: string
   language?: 'es' | 'en'
   theme?: 'dark' | 'light'
+  role: UserRole
+  status: UserStatus
+  alias: string
   createdAt: string
 }
 
@@ -78,4 +95,42 @@ export interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+}
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+
+export type EventStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+export type ParticipantStatus = 'PENDING_CONFIRMATION' | 'CONFIRMED' | 'DECLINED'
+
+export interface EventParticipant {
+  userId: string
+  alias: string
+  assignedPct: number
+  status: ParticipantStatus
+  joinedAt: string
+  respondedAt?: string
+}
+
+export interface ShoppingItem {
+  id: string
+  name: string
+  estimatedCost?: number
+  bought: boolean
+  assignedTo?: string
+  boughtBy?: string
+  boughtAt?: string
+}
+
+export interface BudgetEvent {
+  id: string
+  title: string
+  description?: string
+  goalAmount: number
+  deadline?: string
+  createdBy: string
+  status: EventStatus
+  participants: EventParticipant[]
+  shoppingItems: ShoppingItem[]
+  createdAt: string
+  updatedAt: string
 }

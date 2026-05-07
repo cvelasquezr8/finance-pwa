@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import type { BalanceSummaryDTO, AdjustBalanceDTO } from '@/core/dtos'
 import { balanceService } from '@/services/TransactionService'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/lib/toast'
 
 export function useDashboard(filter: MonthFilter & { quincena?: QuincenaFilter }) {
   const [summary, setSummary] = useState<BalanceSummaryDTO | null>(null)
@@ -20,13 +20,18 @@ export function useDashboard(filter: MonthFilter & { quincena?: QuincenaFilter }
     }
   }, [filter.month, filter.year, filter.quincena])
 
-  useEffect(() => { fetchSummary() }, [fetchSummary])
+  useEffect(() => {
+    fetchSummary()
+  }, [fetchSummary])
 
   const adjustBalance = async (dto: AdjustBalanceDTO) => {
     try {
       const data = await balanceService.adjust(dto)
       setSummary(data)
-      toast({ title: 'Balance ajustado', description: `Nuevo saldo: $${dto.newBalance.toLocaleString('es-MX')}` })
+      toast({
+        title: 'Balance ajustado',
+        description: `Nuevo saldo: $${dto.newBalance.toLocaleString('es-MX')}`,
+      })
     } catch {
       toast({ title: 'Error al ajustar balance', variant: 'destructive' })
     }
@@ -36,7 +41,10 @@ export function useDashboard(filter: MonthFilter & { quincena?: QuincenaFilter }
     try {
       const data = await balanceService.addIncome({ description, amount })
       setSummary(data)
-      toast({ title: 'Saldo agregado', description: `+${amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}` })
+      toast({
+        title: 'Saldo agregado',
+        description: `+${amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`,
+      })
     } catch {
       toast({ title: 'Error al agregar saldo', variant: 'destructive' })
     }

@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { useDashboard } from '../hooks/useDashboard'
 import { useTransactions } from '@/modules/transactions/hooks/useTransactions'
 import { SummaryCards } from './SummaryCards'
-import { TransactionTable } from '@/modules/transactions/components/TransactionTable'
+import { BalanceTrendChart } from './BalanceTrendChart'
+import { CategorySpendingChart } from './CategorySpendingChart'
+import { QuickDailyList } from './QuickDailyList'
 import { MonthFilter } from '@/components/layout/MonthFilter'
-import { getQuincena } from '@/lib/utils'
+import { getQuincena, getQuincenaDateRangeLabel } from '@/lib/utils'
 import type { MonthFilter as MonthFilterType, QuincenaFilter } from '@/core/types'
 
 function useDefaultFilter() {
@@ -21,66 +23,37 @@ export function DashboardPage() {
   const { t } = useTranslation()
   const [filter, setFilter] = useDefaultFilter()
   const { summary, isLoading: summaryLoading } = useDashboard(filter)
-  const { scheduled, daily, income, isLoading: txLoading } = useTransactions(filter)
+  const { scheduled, daily, isLoading: txLoading } = useTransactions(filter)
 
   const months = t('months', { returnObjects: true }) as string[]
-
-  const quincenaLabel = filter.quincena !== 'mensual'
-    ? ` · ${filter.quincena === 'primera' ? t('quincena.days115') : t('quincena.days1631')}`
-    : ''
-
-  const scheduledTitle = `${t('dashboard.scheduledExpenses')}${filter.quincena !== 'mensual' ? ` · ${filter.quincena === 'primera' ? t('quincena.primera') : t('quincena.segunda')}` : ''}`
+  const rangeLabel = getQuincenaDateRangeLabel(filter.quincena, filter.month, filter.year)
 
   return (
-    <div className="space-y-6 p-4 lg:p-6">
-      <div>
+    <div className="p-4 lg:p-6">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
         <p className="text-sm text-muted-foreground">
-          {months[filter.month - 1]} {filter.year}{quincenaLabel}
+          {months[filter.month - 1]} {filter.year}
+          {rangeLabel ? ` · ${rangeLabel}` : ''}
         </p>
       </div>
 
       <MonthFilter filter={filter} onChange={setFilter} />
 
-      <SummaryCards summary={summary} isLoading={summaryLoading} />
+      <div className="mt-6">
+        <SummaryCards summary={summary} isLoading={summaryLoading} />
+      </div>
 
-      <TransactionTable
-        title={scheduledTitle}
-        transactions={scheduled}
-        isLoading={txLoading}
-        onConfirm={async () => {}}
-        onDelete={async () => {}}
-        onEdit={async () => {}}
-        showConfirmColumn={false}
-        showReceiptColumn
-        readOnly
-      />
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
+        <div className="space-y-6">
+          <BalanceTrendChart />
+          <CategorySpendingChart transactions={[...daily, ...scheduled]} isLoading={txLoading} />
+        </div>
 
-      <TransactionTable
-        title={t('dashboard.dailyExpenses')}
-        transactions={daily}
-        isLoading={txLoading}
-        onConfirm={async () => {}}
-        onDelete={async () => {}}
-        onEdit={async () => {}}
-        showConfirmColumn={false}
-        showReceiptColumn
-        readOnly
-      />
-
-      {(txLoading || income.length > 0) && (
-        <TransactionTable
-          title={t('dashboard.income')}
-          transactions={income}
-          isLoading={txLoading}
-          onConfirm={async () => {}}
-          onDelete={async () => {}}
-          onEdit={async () => {}}
-          showConfirmColumn={false}
-          showReceiptColumn={false}
-          readOnly
-        />
-      )}
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          <QuickDailyList transactions={daily} isLoading={txLoading} filter={filter} />
+        </div>
+      </div>
     </div>
   )
 }

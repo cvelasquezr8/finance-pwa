@@ -1,21 +1,9 @@
-# Normalize line endings to LF on commit, convert to CRLF on Windows checkout
-* text=auto
+# Default: normalize to CRLF on checkout (Windows-primary repo)
+* text=auto eol=crlf
 
-# Web source files — always LF
-*.ts    text eol=lf
-*.tsx   text eol=lf
-*.js    text eol=lf
-*.jsx   text eol=lf
-*.json  text eol=lf
-*.css   text eol=lf
-*.html  text eol=lf
-*.md    text eol=lf
-
-# Config files — always LF
-.gitignore      text eol=lf
-.gitattributes  text eol=lf
-*.config.js     text eol=lf
-*.config.ts     text eol=lf
+# Shell scripts — must stay LF or they break on macOS/Linux interpreters
+.husky/* text eol=lf
+*.sh      text eol=lf
 
 # Binary files — no conversion
 *.png   binary

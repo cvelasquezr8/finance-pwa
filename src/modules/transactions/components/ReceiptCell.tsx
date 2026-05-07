@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { transactionService } from '@/services/TransactionService'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/lib/toast'
 
 interface Props {
   transactionId: string
@@ -14,7 +14,13 @@ interface Props {
   readOnly?: boolean
 }
 
-export function ReceiptCell({ transactionId, description, receiptUrl, onUploaded, readOnly = false }: Props) {
+export function ReceiptCell({
+  transactionId,
+  description,
+  receiptUrl,
+  onUploaded,
+  readOnly = false,
+}: Props) {
   const { t } = useTranslation()
   const [uploading, setUploading] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -24,7 +30,11 @@ export function ReceiptCell({ transactionId, description, receiptUrl, onUploaded
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 10 * 1024 * 1024) {
-      toast({ title: t('receipt.tooBig'), description: t('receipt.tooBigDesc'), variant: 'destructive' })
+      toast({
+        title: t('receipt.tooBig'),
+        description: t('receipt.tooBigDesc'),
+        variant: 'destructive',
+      })
       return
     }
     setUploading(true)
@@ -62,10 +72,13 @@ export function ReceiptCell({ transactionId, description, receiptUrl, onUploaded
             aria-label={t('receipt.upload')}
             title={receiptUrl ? t('receipt.replace') : t('receipt.upload')}
           >
-            {uploading
-              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              : <Paperclip className={`h-3.5 w-3.5 ${receiptUrl ? 'text-violet-600 dark:text-violet-400' : ''}`} />
-            }
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Paperclip
+                className={`h-3.5 w-3.5 ${receiptUrl ? 'text-violet-600 dark:text-violet-400' : ''}`}
+              />
+            )}
           </Button>
         </>
       )}
@@ -74,7 +87,7 @@ export function ReceiptCell({ transactionId, description, receiptUrl, onUploaded
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300"
+          className="h-7 w-7 text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
           onClick={() => setPreviewOpen(true)}
           aria-label={t('receipt.view')}
           title={t('receipt.view')}

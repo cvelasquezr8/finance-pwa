@@ -7,43 +7,76 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { CATEGORY_LABELS } from '@/lib/utils'
-import type { TransactionResponseDTO, UpdateTransactionDTO } from '@/core/dtos'
+import type { TransactionResponseDTO, UpdateTransactionDTO, CardDTO } from '@/core/dtos'
 import type { QuincenaType } from '@/core/types'
 
 const editSchema = z.object({
   description: z.string().min(2),
   amount: z.coerce.number().positive(),
-  category: z.enum(['vivienda', 'servicios', 'alimentacion', 'transporte', 'salud', 'entretenimiento', 'educacion', 'deuda', 'otros']),
+  category: z.enum([
+    'vivienda',
+    'servicios',
+    'alimentacion',
+    'transporte',
+    'salud',
+    'entretenimiento',
+    'educacion',
+    'deuda',
+    'otros',
+  ]),
   dueDay: z.coerce.number().min(1).max(31).optional(),
   quincena: z.enum(['primera', 'segunda']).optional(),
   isRecurring: z.boolean().optional(),
   isCC: z.boolean().optional(),
+  cardId: z.string().nullable().optional(),
 })
 
 type EditFormValues = z.infer<typeof editSchema>
 
 interface Props {
   transaction: TransactionResponseDTO | null
+  cards?: CardDTO[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (id: string, dto: UpdateTransactionDTO) => Promise<unknown>
 }
 
-export function EditTransactionModal({ transaction, open, onOpenChange, onSave }: Props) {
+export function EditTransactionModal({ transaction, cards, open, onOpenChange, onSave }: Props) {
   const { t } = useTranslation()
   const isScheduled = transaction?.type === 'scheduled'
+  const creditCards = cards?.filter((c) => c.type === 'CREDIT') ?? []
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<EditFormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
   })
 
   const quincena = watch('quincena')
   const isRecurring = watch('isRecurring')
   const isCC = watch('isCC')
+  const cardId = watch('cardId')
 
   useEffect(() => {
     if (!transaction) return
@@ -55,6 +88,7 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
       quincena: transaction.quincena,
       isRecurring: transaction.isRecurring,
       isCC: transaction.isCC ?? false,
+      cardId: transaction.cardId ?? null,
     })
   }, [transaction, reset])
 
@@ -77,7 +111,9 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
           <div className="space-y-1.5">
             <Label htmlFor="e-description">{t('editTransaction.description')}</Label>
             <Input id="e-description" {...register('description')} />
-            {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+            {errors.description && (
+              <p className="text-xs text-destructive">{errors.description.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -93,10 +129,14 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
                 value={watch('category')}
                 onValueChange={(v) => setValue('category', v as EditFormValues['category'])}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {Object.keys(CATEGORY_LABELS).map((k) => (
-                    <SelectItem key={k} value={k}>{t(`categories.${k}`)}</SelectItem>
+                    <SelectItem key={k} value={k}>
+                      {t(`categories.${k}`)}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -106,7 +146,9 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
               <div className="space-y-1.5">
                 <Label htmlFor="e-dueDay">{t('editTransaction.dueDay')}</Label>
                 <Input id="e-dueDay" type="number" min={1} max={31} {...register('dueDay')} />
-                {errors.dueDay && <p className="text-xs text-destructive">{errors.dueDay.message}</p>}
+                {errors.dueDay && (
+                  <p className="text-xs text-destructive">{errors.dueDay.message}</p>
+                )}
               </div>
             )}
           </div>
@@ -115,7 +157,7 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
             <>
               <div className="space-y-1.5">
                 <Label>{t('editTransaction.quincena')}</Label>
-                <div className="flex rounded-lg border border-border p-0.5 w-fit">
+                <div className="flex w-fit rounded-lg border border-border p-0.5">
                   {(['primera', 'segunda'] as QuincenaType[]).map((q) => (
                     <button
                       key={q}
@@ -147,21 +189,56 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
           )}
 
           {transaction?.type !== 'income' && (
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="e-cc"
-                checked={!!isCC}
-                onCheckedChange={(v) => setValue('isCC', Boolean(v))}
-                className="mt-0.5"
-              />
-              <div>
-                <Label htmlFor="e-cc" className="cursor-pointer font-normal flex items-center gap-1.5">
-                  <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                  {t('editTransaction.cc')}
-                </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">{t('editTransaction.ccHint')}</p>
+            <>
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="e-cc"
+                  checked={!!isCC}
+                  onCheckedChange={(v) => {
+                    setValue('isCC', Boolean(v))
+                    if (!v) setValue('cardId', null)
+                  }}
+                  className="mt-0.5"
+                />
+                <div>
+                  <Label
+                    htmlFor="e-cc"
+                    className="flex cursor-pointer items-center gap-1.5 font-normal"
+                  >
+                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('editTransaction.cc')}
+                  </Label>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t('editTransaction.ccHint')}
+                  </p>
+                </div>
               </div>
-            </div>
+
+              {isCC && creditCards.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label>{t('cards.selectCard')}</Label>
+                  <Select
+                    value={cardId ?? '__none__'}
+                    onValueChange={(v) => setValue('cardId', v === '__none__' ? null : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('cards.noCardLinked')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">{t('cards.noCardLinked')}</SelectItem>
+                      {creditCards.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="flex items-center gap-1.5">
+                            <CreditCard className="h-3.5 w-3.5" />
+                            {c.name} ···{c.lastFour}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </>
           )}
 
           <DialogFooter>
@@ -169,9 +246,13 @@ export function EditTransactionModal({ transaction, open, onOpenChange, onSave }
               {t('editTransaction.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('editTransaction.saving')}</>
-                : t('editTransaction.save')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('editTransaction.saving')}
+                </>
+              ) : (
+                t('editTransaction.save')
+              )}
             </Button>
           </DialogFooter>
         </form>

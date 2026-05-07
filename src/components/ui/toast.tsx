@@ -27,7 +27,8 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: 'border bg-background text-foreground',
-        destructive: 'destructive group border-destructive bg-destructive text-destructive-foreground',
+        destructive:
+          'destructive group border-destructive bg-destructive text-destructive-foreground',
       },
     },
     defaultVariants: { variant: 'default' },
@@ -79,7 +80,11 @@ const ToastTitle = React.forwardRef<
   React.ElementRef<typeof ToastPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitive.Title ref={ref} className={cn('text-sm font-semibold [&+div]:text-xs', className)} {...props} />
+  <ToastPrimitive.Title
+    ref={ref}
+    className={cn('text-sm font-semibold [&+div]:text-xs', className)}
+    {...props}
+  />
 ))
 ToastTitle.displayName = ToastPrimitive.Title.displayName
 
@@ -87,7 +92,11 @@ const ToastDescription = React.forwardRef<
   React.ElementRef<typeof ToastPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitive.Description ref={ref} className={cn('text-sm opacity-90', className)} {...props} />
+  <ToastPrimitive.Description
+    ref={ref}
+    className={cn('text-sm opacity-90', className)}
+    {...props}
+  />
 ))
 ToastDescription.displayName = ToastPrimitive.Description.displayName
 
@@ -95,6 +104,13 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
 export {
-  type ToastProps, type ToastActionElement, ToastProvider, ToastViewport,
-  Toast, ToastTitle, ToastDescription, ToastClose, ToastAction,
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
 }

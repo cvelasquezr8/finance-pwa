@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Husky shell scripts — must stay LF or they break on macOS/Linux
+.husky/
+
+# Python utility scripts
+*.py
+
+# Generated / binary
+*.png
+*.jpg
+*.ico
+*.svg
+*.woff
+*.woff2

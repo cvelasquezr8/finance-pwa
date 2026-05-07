@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
-import type { TransactionResponseDTO, CreateTransactionDTO, UpdateTransactionDTO } from '@/core/dtos'
+import type {
+  TransactionResponseDTO,
+  CreateTransactionDTO,
+  UpdateTransactionDTO,
+} from '@/core/dtos'
 import { transactionService } from '@/services/TransactionService'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/lib/toast'
 
 interface State {
   transactions: TransactionResponseDTO[]
@@ -20,12 +24,21 @@ type Action =
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'LOADING': return { ...state, isLoading: true, error: null }
-    case 'SUCCESS': return { transactions: action.data, isLoading: false, error: null }
-    case 'ERROR': return { ...state, isLoading: false, error: action.error }
-    case 'UPDATE_ONE': return { ...state, transactions: state.transactions.map((t) => t.id === action.tx.id ? action.tx : t) }
-    case 'ADD_ONE': return { ...state, transactions: [action.tx, ...state.transactions] }
-    case 'REMOVE_ONE': return { ...state, transactions: state.transactions.filter((t) => t.id !== action.id) }
+    case 'LOADING':
+      return { ...state, isLoading: true, error: null }
+    case 'SUCCESS':
+      return { transactions: action.data, isLoading: false, error: null }
+    case 'ERROR':
+      return { ...state, isLoading: false, error: action.error }
+    case 'UPDATE_ONE':
+      return {
+        ...state,
+        transactions: state.transactions.map((t) => (t.id === action.tx.id ? action.tx : t)),
+      }
+    case 'ADD_ONE':
+      return { ...state, transactions: [action.tx, ...state.transactions] }
+    case 'REMOVE_ONE':
+      return { ...state, transactions: state.transactions.filter((t) => t.id !== action.id) }
   }
 }
 
@@ -43,7 +56,9 @@ export function useTransactions(filter: MonthFilter & { quincena?: QuincenaFilte
     }
   }, [filter.month, filter.year, filter.quincena])
 
-  useEffect(() => { fetchTransactions() }, [fetchTransactions])
+  useEffect(() => {
+    fetchTransactions()
+  }, [fetchTransactions])
 
   const addTransaction = async (dto: CreateTransactionDTO) => {
     try {
@@ -63,7 +78,11 @@ export function useTransactions(filter: MonthFilter & { quincena?: QuincenaFilte
       toast({ title: 'Gasto actualizado' })
       return tx
     } catch {
-      toast({ title: 'Error', description: 'No se pudo actualizar el gasto', variant: 'destructive' })
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el gasto',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -89,8 +108,18 @@ export function useTransactions(filter: MonthFilter & { quincena?: QuincenaFilte
   }
 
   const scheduled = state.transactions.filter((t) => t.type === 'scheduled')
-  const daily     = state.transactions.filter((t) => t.type === 'daily')
-  const income    = state.transactions.filter((t) => t.type === 'income')
+  const daily = state.transactions.filter((t) => t.type === 'daily')
+  const income = state.transactions.filter((t) => t.type === 'income')
 
-  return { ...state, scheduled, daily, income, addTransaction, updateTransaction, confirmTransaction, removeTransaction, refetch: fetchTransactions }
+  return {
+    ...state,
+    scheduled,
+    daily,
+    income,
+    addTransaction,
+    updateTransaction,
+    confirmTransaction,
+    removeTransaction,
+    refetch: fetchTransactions,
+  }
 }
