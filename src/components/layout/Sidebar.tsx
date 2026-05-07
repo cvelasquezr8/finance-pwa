@@ -27,15 +27,15 @@ export function Sidebar() {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: t('nav.dashboard') },
-    { to: '/events', icon: PartyPopper, label: t('events.navLabel') },
-    { to: '/transactions', icon: ArrowLeftRight, label: t('nav.transactions') },
-    { to: '/analytics', icon: TrendingUp, label: t('nav.analytics') },
-    { to: '/history', icon: History, label: t('nav.history') },
-    { to: '/cards', icon: CreditCard, label: t('cards.navLabel') },
     ...(user?.role === 'ADMIN'
       ? [{ to: '/admin/users', icon: ShieldCheck, label: t('admin.navLabel') }]
       : []),
+    { to: '/', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/transactions', icon: ArrowLeftRight, label: t('nav.transactions') },
+    { to: '/cards', icon: CreditCard, label: t('cards.navLabel') },
+    { to: '/events', icon: PartyPopper, label: t('events.navLabel') },
+    { to: '/analytics', icon: TrendingUp, label: t('nav.analytics') },
+    { to: '/history', icon: History, label: t('nav.history') },
   ]
 
   useEffect(() => {
