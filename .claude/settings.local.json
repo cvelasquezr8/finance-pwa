@@ -24,7 +24,8 @@
       "Bash(Select-String -Pattern \"eslint|lint|tsc\")",
       "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Projects\\\\finance-project\\\\finance-pwa\" -Directory)",
       "Bash(Select-Object Name)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm test *)"
     ]
   }
 }

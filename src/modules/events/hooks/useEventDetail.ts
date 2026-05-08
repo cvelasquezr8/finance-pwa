@@ -1,106 +1,106 @@
-import { useCallback, useEffect, useReducer } from 'react'
+import { useEffect } from 'react'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { eventService } from '@/services/EventService'
 import type {
+  AddShoppingItemDTO,
   BudgetEventDTO,
   InviteParticipantDTO,
+  PaginatedResponseDTO,
+  PaginationQueryDTO,
   RespondInvitationDTO,
-  AddShoppingItemDTO,
   ToggleShoppingItemDTO,
+  TransactionResponseDTO,
 } from '@/core/dtos'
-import type { TransactionResponseDTO } from '@/core/dtos'
 
-type Action =
-  | { type: 'FETCH_START' }
-  | { type: 'SUCCESS'; event: BudgetEventDTO; transactions: TransactionResponseDTO[] }
-  | { type: 'ERROR'; error: string }
-  | { type: 'UPDATE_EVENT'; event: BudgetEventDTO }
-
-interface State {
-  event: BudgetEventDTO | null
-  linkedTransactions: TransactionResponseDTO[]
-  isLoading: boolean
-  error: string | null
+const EMPTY_PAGE: PaginatedResponseDTO<TransactionResponseDTO> = {
+  data: [],
+  total: 0,
+  page: 1,
+  pageSize: 10,
+  hasMore: false,
 }
 
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'FETCH_START':
-      return { ...state, isLoading: true, error: null }
-    case 'SUCCESS':
-      return {
-        event: action.event,
-        linkedTransactions: action.transactions,
-        isLoading: false,
-        error: null,
-      }
-    case 'ERROR':
-      return { ...state, isLoading: false, error: action.error }
-    case 'UPDATE_EVENT':
-      return { ...state, event: action.event }
-  }
-}
-
-export function useEventDetail(eventId: string) {
+export function useEventDetail(eventId: string, txQuery: PaginationQueryDTO = {}) {
   const { user } = useAuth()
-  const [state, dispatch] = useReducer(reducer, {
-    event: null,
-    linkedTransactions: [],
-    isLoading: false,
-    error: null,
+  const queryClient = useQueryClient()
+
+  const eventQuery = useQuery<BudgetEventDTO>({
+    queryKey: ['events', 'detail', eventId],
+    queryFn: () => eventService.getEvent(eventId),
+    enabled: !!eventId,
   })
 
-  const fetchEvent = useCallback(async () => {
-    dispatch({ type: 'FETCH_START' })
-    try {
-      const [event, transactions] = await Promise.all([
-        eventService.getEvent(eventId),
-        eventService.getLinkedTransactions(eventId),
-      ])
-      dispatch({ type: 'SUCCESS', event, transactions })
-    } catch (e) {
-      dispatch({ type: 'ERROR', error: (e as Error).message })
+  const transactionsQuery = useQuery({
+    queryKey: ['events', 'detail', eventId, 'transactions', txQuery],
+    queryFn: () => eventService.getLinkedTransactions(eventId, txQuery),
+    enabled: !!eventId,
+    placeholderData: keepPreviousData,
+  })
+
+  const inviteMutation = useMutation({
+    mutationFn: (dto: InviteParticipantDTO) => eventService.inviteParticipant(dto),
+    onSuccess: (event) => {
+      queryClient.setQueryData(['events', 'detail', eventId], event)
+    },
+  })
+
+  const respondMutation = useMutation({
+    mutationFn: (status: RespondInvitationDTO['status']) => {
+      if (!user) throw new Error('Not authenticated')
+      return eventService.respondInvitation({ eventId, status }, user.id)
+    },
+    onSuccess: (event) => {
+      queryClient.setQueryData(['events', 'detail', eventId], event)
+    },
+  })
+
+  const addItemMutation = useMutation({
+    mutationFn: (dto: AddShoppingItemDTO) => eventService.addShoppingItem(dto),
+    onSuccess: (event) => {
+      queryClient.setQueryData(['events', 'detail', eventId], event)
+    },
+  })
+
+  const toggleItemMutation = useMutation({
+    mutationFn: (dto: ToggleShoppingItemDTO) => {
+      if (!user) throw new Error('Not authenticated')
+      return eventService.toggleShoppingItem(dto, user.id)
+    },
+    onSuccess: (event) => {
+      queryClient.setQueryData(['events', 'detail', eventId], event)
+    },
+  })
+
+  // Refetch on global "financeDataChanged" events (e.g. expense registration).
+  useEffect(() => {
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: ['events', 'detail', eventId] })
     }
-  }, [eventId])
-
-  const inviteParticipant = async (dto: InviteParticipantDTO) => {
-    const event = await eventService.inviteParticipant(dto)
-    dispatch({ type: 'UPDATE_EVENT', event })
-  }
-
-  const respondInvitation = async (status: RespondInvitationDTO['status']) => {
-    if (!user) return
-    const event = await eventService.respondInvitation({ eventId, status }, user.id)
-    dispatch({ type: 'UPDATE_EVENT', event })
-  }
-
-  const addShoppingItem = async (dto: AddShoppingItemDTO) => {
-    const event = await eventService.addShoppingItem(dto)
-    dispatch({ type: 'UPDATE_EVENT', event })
-  }
-
-  const toggleShoppingItem = async (dto: ToggleShoppingItemDTO) => {
-    if (!user) return
-    const event = await eventService.toggleShoppingItem(dto, user.id)
-    dispatch({ type: 'UPDATE_EVENT', event })
-  }
-
-  useEffect(() => {
-    fetchEvent()
-  }, [fetchEvent])
-
-  useEffect(() => {
-    const handler = () => fetchEvent()
     window.addEventListener('financeDataChanged', handler)
     return () => window.removeEventListener('financeDataChanged', handler)
-  }, [fetchEvent])
+  }, [eventId, queryClient])
+
+  const txData = transactionsQuery.data ?? EMPTY_PAGE
 
   return {
-    ...state,
-    fetchEvent,
-    inviteParticipant,
-    respondInvitation,
-    addShoppingItem,
-    toggleShoppingItem,
+    event: eventQuery.data ?? null,
+    linkedTransactions: txData.data,
+    transactionsTotal: txData.total,
+    transactionsPage: txData.page,
+    transactionsPageSize: txData.pageSize,
+    transactionsHasMore: txData.hasMore,
+    isLoading: eventQuery.isLoading || transactionsQuery.isLoading,
+    isFetchingTransactions: transactionsQuery.isFetching,
+    error: eventQuery.error ? (eventQuery.error as Error).message : null,
+    fetchEvent: () => {
+      eventQuery.refetch()
+      transactionsQuery.refetch()
+    },
+    inviteParticipant: (dto: InviteParticipantDTO) => inviteMutation.mutateAsync(dto),
+    respondInvitation: (status: RespondInvitationDTO['status']) =>
+      respondMutation.mutateAsync(status),
+    addShoppingItem: (dto: AddShoppingItemDTO) => addItemMutation.mutateAsync(dto),
+    toggleShoppingItem: (dto: ToggleShoppingItemDTO) => toggleItemMutation.mutateAsync(dto),
   }
 }

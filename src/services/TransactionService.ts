@@ -10,15 +10,30 @@ import type {
   BalanceSummaryDTO,
   AdjustBalanceDTO,
   PaginatedResponseDTO,
+  PaginationQueryDTO,
   MonthlyTrendDTO,
 } from '@/core/dtos'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import { generateKey } from '@/lib/idempotency'
 
+export type TransactionListFilter = MonthFilter & {
+  quincena?: QuincenaFilter
+  type?: 'scheduled' | 'daily' | 'income' | 'all'
+  cardId?: string | null
+} & PaginationQueryDTO
+
+export type TransactionHistoryFilter = {
+  fromMonth?: number
+  fromYear?: number
+  toMonth?: number
+  toYear?: number
+  year?: number
+  type?: 'scheduled' | 'daily' | 'income' | 'all'
+  category?: string
+} & PaginationQueryDTO
+
 class TransactionService extends BaseApiService {
-  async list(
-    filter: MonthFilter & { quincena?: QuincenaFilter }
-  ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
+  async list(filter: TransactionListFilter): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     if (useMock()) return mockTransactionService.list(filter)
     return this.get(API_ROUTES.transactions.list, { params: filter })
   }
@@ -46,11 +61,9 @@ class TransactionService extends BaseApiService {
     return this.delete(API_ROUTES.transactions.byId(id))
   }
 
-  async listHistory(filters: {
-    year: number
-    type?: 'scheduled' | 'daily' | 'income' | 'all'
-    category?: string
-  }): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
+  async listHistory(
+    filters: TransactionHistoryFilter
+  ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     if (useMock()) return mockTransactionService.listHistory(filters)
     return this.get(API_ROUTES.transactions.history, { params: filters })
   }

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Eye, Paperclip, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { transactionService } from '@/services/TransactionService'
@@ -22,6 +23,7 @@ export function ReceiptCell({
   readOnly = false,
 }: Props) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -41,6 +43,7 @@ export function ReceiptCell({
     try {
       const tx = await transactionService.uploadReceipt(transactionId, file)
       if (tx.receiptUrl) onUploaded?.(tx.receiptUrl)
+      queryClient.invalidateQueries({ queryKey: ['transactions'], exact: false })
       toast({ title: t('receipt.saved') })
     } catch {
       toast({ title: t('receipt.error'), variant: 'destructive' })

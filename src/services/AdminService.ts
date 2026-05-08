@@ -2,12 +2,17 @@ import { BaseApiService } from './BaseApiService'
 import { mockAdminService } from './mock/MockAdapter'
 import { useMock } from './api-config'
 import { API_ROUTES } from './api-routes'
-import type { AdminUserDTO, UpdateUserRoleDTO } from '@/core/dtos'
+import type {
+  AdminUserDTO,
+  PaginatedResponseDTO,
+  PaginationQueryDTO,
+  UpdateUserRoleDTO,
+} from '@/core/dtos'
 
 class AdminService extends BaseApiService {
-  async listUsers(): Promise<AdminUserDTO[]> {
-    if (useMock()) return mockAdminService.listUsers()
-    return this.get(API_ROUTES.admin.users)
+  async listUsers(query: PaginationQueryDTO = {}): Promise<PaginatedResponseDTO<AdminUserDTO>> {
+    if (useMock()) return mockAdminService.listUsers(query)
+    return this.get(API_ROUTES.admin.users, { params: query })
   }
 
   async updateRole(dto: UpdateUserRoleDTO): Promise<AdminUserDTO> {

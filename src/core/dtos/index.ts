@@ -134,6 +134,14 @@ export interface PaginatedResponseDTO<T> {
   hasMore: boolean
 }
 
+export interface PaginationQueryDTO {
+  page?: number
+  limit?: number
+  search?: string
+  sortBy?: string
+  order?: 'asc' | 'desc'
+}
+
 export interface ApiErrorDTO {
   code: string
   message: string

@@ -137,6 +137,7 @@
     "description": "Description",
     "category": "Category",
     "amount": "Amount",
+    "date": "Date",
     "confirmedColumn": "Confirmed",
     "status": "Status",
     "receipt": "Receipt",
@@ -147,9 +148,25 @@
     "confirmExpense": "Confirm expense",
     "deleteAria": "Delete",
     "editAria": "Edit",
+    "actionsAria": "Actions",
     "empty": "No expenses recorded",
     "ccTooltip": "Credit Card — does not affect bank balance",
     "total": "Total"
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "pageOf": "Page {{page}} of {{total}}",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "records": "records",
+    "noResults": "No results found",
+    "searchPlaceholder": "Search…",
+    "sortBy": "Sort by",
+    "sortAsc": "Ascending",
+    "sortDesc": "Descending"
   },
   "addTransaction": {
     "triggerLabel": "Add Transaction",

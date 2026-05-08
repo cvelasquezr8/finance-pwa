@@ -9,6 +9,8 @@ import type {
   RespondInvitationDTO,
   AddShoppingItemDTO,
   ToggleShoppingItemDTO,
+  PaginatedResponseDTO,
+  PaginationQueryDTO,
 } from '@/core/dtos'
 import type { TransactionResponseDTO } from '@/core/dtos'
 
@@ -62,9 +64,15 @@ class EventService extends BaseApiService {
     return this.post<void, object>(API_ROUTES.events.cancel(id), {})
   }
 
-  async getLinkedTransactions(eventId: string): Promise<TransactionResponseDTO[]> {
-    if (useMock()) return mockEventService.getLinkedTransactions(eventId)
-    return this.get<TransactionResponseDTO[]>(API_ROUTES.events.transactions(eventId))
+  async getLinkedTransactions(
+    eventId: string,
+    query: PaginationQueryDTO = {}
+  ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
+    if (useMock()) return mockEventService.getLinkedTransactions(eventId, query)
+    return this.get<PaginatedResponseDTO<TransactionResponseDTO>>(
+      API_ROUTES.events.transactions(eventId),
+      { params: query }
+    )
   }
 }
 

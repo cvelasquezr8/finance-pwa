@@ -53,9 +53,9 @@ export function useEvents() {
     try {
       const events = await eventService.listEvents(user.id)
       const txArrays = await Promise.all(
-        events.map((e) => eventService.getLinkedTransactions(e.id))
+        events.map((e) => eventService.getLinkedTransactions(e.id, { limit: 500 }))
       )
-      const transactions = txArrays.flat()
+      const transactions = txArrays.flatMap((r) => r.data)
       dispatch({ type: 'SUCCESS', events, transactions })
     } catch (e) {
       dispatch({ type: 'ERROR', error: (e as Error).message })

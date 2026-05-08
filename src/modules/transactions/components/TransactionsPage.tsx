@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useTransactions } from '../hooks/useTransactions'
 import { useDashboard } from '@/modules/dashboard/hooks/useDashboard'
 import { useCards } from '@/modules/cards/hooks/useCards'
-import { TransactionTable } from './TransactionTable'
+import { PaginatedTransactionSection } from './PaginatedTransactionSection'
 import { MonthFilter } from '@/components/layout/MonthFilter'
 import { getQuincena, getQuincenaDateRangeLabel, formatCurrency } from '@/lib/utils'
 import type { MonthFilter as MonthFilterType, QuincenaFilter } from '@/core/types'
@@ -31,44 +30,13 @@ export function TransactionsPage() {
 
   const [cardFilter, setCardFilter] = useState<string>('all')
 
-  const {
-    scheduled,
-    daily,
-    income,
-    isLoading,
-    confirmTransaction,
-    removeTransaction,
-    updateTransaction,
-  } = useTransactions(filter)
-  const { refetch: refetchSummary } = useDashboard(filter)
+  const { summary, refetch: refetchSummary } = useDashboard(filter)
   const { cards } = useCards()
 
-  const applyCardFilter = <T extends { isCC: boolean; cardId: string | null }>(txs: T[]): T[] => {
-    if (cardFilter === 'all') return txs
-    if (cardFilter === 'cc-only') return txs.filter((t) => t.isCC)
-    return txs.filter((t) => t.cardId === cardFilter)
-  }
-
-  const filteredScheduled = applyCardFilter(scheduled)
-  const filteredDaily = applyCardFilter(daily)
-  const filteredIncome = cardFilter === 'all' || cardFilter === 'cc-only' ? income : []
-
-  const handleConfirm = async (id: string, confirmed: boolean) => {
-    await confirmTransaction(id, confirmed)
-    refetchSummary()
-  }
-
-  const handleDelete = async (id: string) => {
-    await removeTransaction(id)
-    refetchSummary()
-  }
-
-  const totalScheduled = filteredScheduled.reduce((s, tx) => s + tx.amount, 0)
-  const totalDaily = filteredDaily.reduce((s, tx) => s + tx.amount, 0)
-  const totalIncome = filteredIncome.reduce((s, tx) => s + tx.amount, 0)
-  const confirmedScheduled = filteredScheduled
-    .filter((tx) => tx.status === 'confirmed')
-    .reduce((s, tx) => s + tx.amount, 0)
+  const totalScheduled = summary?.totalPendingScheduled ?? 0
+  const totalConfirmed = summary?.totalConfirmedScheduled ?? 0
+  const totalDaily = summary?.totalDailyExpenses ?? 0
+  const totalIncome = summary?.expectedIncome ?? 0
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
@@ -136,7 +104,7 @@ export function TransactionsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-              -{formatCurrency(confirmedScheduled)}
+              -{formatCurrency(totalConfirmed)}
             </p>
           </CardContent>
         </Card>
@@ -154,43 +122,36 @@ export function TransactionsPage() {
         </Card>
       </div>
 
-      <TransactionTable
+      <PaginatedTransactionSection
         title={t('dashboard.scheduledExpenses')}
-        transactions={filteredScheduled}
+        filter={filter}
+        type="scheduled"
+        cardFilter={cardFilter}
         cards={cards}
-        isLoading={isLoading}
-        onConfirm={handleConfirm}
-        onDelete={handleDelete}
-        onEdit={updateTransaction}
         showConfirmColumn
         showReceiptColumn
+        onMutated={() => refetchSummary()}
       />
 
-      <TransactionTable
+      <PaginatedTransactionSection
         title={t('dashboard.dailyExpenses')}
-        transactions={filteredDaily}
+        filter={filter}
+        type="daily"
+        cardFilter={cardFilter}
         cards={cards}
-        isLoading={isLoading}
-        onConfirm={handleConfirm}
-        onDelete={handleDelete}
-        onEdit={updateTransaction}
-        showConfirmColumn={false}
         showReceiptColumn
+        onMutated={() => refetchSummary()}
       />
 
-      {(isLoading || filteredIncome.length > 0) && (
-        <TransactionTable
-          title={t('dashboard.income')}
-          transactions={filteredIncome}
-          cards={cards}
-          isLoading={isLoading}
-          onConfirm={async () => {}}
-          onDelete={handleDelete}
-          onEdit={updateTransaction}
-          showConfirmColumn={false}
-          showReceiptColumn={false}
-        />
-      )}
+      <PaginatedTransactionSection
+        title={t('dashboard.income')}
+        filter={filter}
+        type="income"
+        cardFilter={cardFilter}
+        cards={cards}
+        onMutated={() => refetchSummary()}
+        hideWhenEmpty
+      />
     </div>
   )
 }

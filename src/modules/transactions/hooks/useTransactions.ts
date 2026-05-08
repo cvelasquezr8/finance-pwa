@@ -1,125 +1,122 @@
-import { useCallback, useEffect, useReducer } from 'react'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import type {
-  TransactionResponseDTO,
   CreateTransactionDTO,
+  PaginatedResponseDTO,
+  PaginationQueryDTO,
+  TransactionResponseDTO,
   UpdateTransactionDTO,
 } from '@/core/dtos'
-import { transactionService } from '@/services/TransactionService'
+import { transactionService, type TransactionListFilter } from '@/services/TransactionService'
 import { toast } from '@/lib/toast'
 
-interface State {
-  transactions: TransactionResponseDTO[]
-  isLoading: boolean
-  error: string | null
+const EMPTY_PAGE: PaginatedResponseDTO<TransactionResponseDTO> = {
+  data: [],
+  total: 0,
+  page: 1,
+  pageSize: 10,
+  hasMore: false,
 }
 
-type Action =
-  | { type: 'LOADING' }
-  | { type: 'SUCCESS'; data: TransactionResponseDTO[] }
-  | { type: 'ERROR'; error: string }
-  | { type: 'UPDATE_ONE'; tx: TransactionResponseDTO }
-  | { type: 'ADD_ONE'; tx: TransactionResponseDTO }
-  | { type: 'REMOVE_ONE'; id: string }
+export type TransactionsQueryArgs = MonthFilter & {
+  quincena?: QuincenaFilter
+  type?: 'scheduled' | 'daily' | 'income' | 'all'
+  cardId?: string | null
+} & PaginationQueryDTO
 
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'LOADING':
-      return { ...state, isLoading: true, error: null }
-    case 'SUCCESS':
-      return { transactions: action.data, isLoading: false, error: null }
-    case 'ERROR':
-      return { ...state, isLoading: false, error: action.error }
-    case 'UPDATE_ONE':
-      return {
-        ...state,
-        transactions: state.transactions.map((t) => (t.id === action.tx.id ? action.tx : t)),
-      }
-    case 'ADD_ONE':
-      return { ...state, transactions: [action.tx, ...state.transactions] }
-    case 'REMOVE_ONE':
-      return { ...state, transactions: state.transactions.filter((t) => t.id !== action.id) }
-  }
-}
+export function useTransactionsQuery(args: TransactionsQueryArgs) {
+  const queryClient = useQueryClient()
+  const filter: TransactionListFilter = args
 
-export function useTransactions(filter: MonthFilter & { quincena?: QuincenaFilter }) {
-  const [state, dispatch] = useReducer(reducer, { transactions: [], isLoading: true, error: null })
+  const query = useQuery({
+    queryKey: ['transactions', 'list', filter],
+    queryFn: () => transactionService.list(filter),
+    placeholderData: keepPreviousData,
+  })
 
-  const fetchTransactions = useCallback(async () => {
-    dispatch({ type: 'LOADING' })
-    try {
-      const res = await transactionService.list(filter)
-      dispatch({ type: 'SUCCESS', data: res.data })
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al cargar transacciones'
-      dispatch({ type: 'ERROR', error: msg })
-    }
-  }, [filter.month, filter.year, filter.quincena])
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['transactions'], exact: false })
 
-  useEffect(() => {
-    fetchTransactions()
-  }, [fetchTransactions])
-
-  const addTransaction = async (dto: CreateTransactionDTO) => {
-    try {
-      const tx = await transactionService.create(dto)
-      dispatch({ type: 'ADD_ONE', tx })
-      toast({ title: 'Gasto agregado', description: dto.description })
-      return tx
-    } catch {
+  const addMutation = useMutation({
+    mutationFn: (dto: CreateTransactionDTO) => transactionService.create(dto),
+    onSuccess: () => {
+      invalidate()
+      queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
+      toast({ title: 'Gasto agregado' })
+    },
+    onError: () => {
       toast({ title: 'Error', description: 'No se pudo agregar el gasto', variant: 'destructive' })
-    }
-  }
+    },
+  })
 
-  const updateTransaction = async (id: string, dto: UpdateTransactionDTO) => {
-    try {
-      const tx = await transactionService.update(id, dto)
-      dispatch({ type: 'UPDATE_ONE', tx })
+  const updateMutation = useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateTransactionDTO }) =>
+      transactionService.update(id, dto),
+    onSuccess: () => {
+      invalidate()
+      queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
       toast({ title: 'Gasto actualizado' })
-      return tx
-    } catch {
+    },
+    onError: () => {
       toast({
         title: 'Error',
         description: 'No se pudo actualizar el gasto',
         variant: 'destructive',
       })
-    }
-  }
+    },
+  })
 
-  const confirmTransaction = async (id: string, confirmed: boolean) => {
-    try {
-      const tx = await transactionService.confirm({ transactionId: id, confirmed })
-      dispatch({ type: 'UPDATE_ONE', tx })
-      toast({ title: confirmed ? 'Gasto confirmado' : 'Confirmación removida' })
-      return tx
-    } catch {
+  const confirmMutation = useMutation({
+    mutationFn: ({ id, confirmed }: { id: string; confirmed: boolean }) =>
+      transactionService.confirm({ transactionId: id, confirmed }),
+    onSuccess: (_, vars) => {
+      invalidate()
+      queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
+      toast({ title: vars.confirmed ? 'Gasto confirmado' : 'Confirmación removida' })
+    },
+    onError: () => {
       toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' })
-    }
-  }
+    },
+  })
 
-  const removeTransaction = async (id: string) => {
-    try {
-      await transactionService.remove(id)
-      dispatch({ type: 'REMOVE_ONE', id })
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => transactionService.remove(id),
+    onSuccess: () => {
+      invalidate()
+      queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
       toast({ title: 'Gasto eliminado' })
-    } catch {
+    },
+    onError: () => {
       toast({ title: 'Error', description: 'No se pudo eliminar', variant: 'destructive' })
-    }
-  }
+    },
+  })
 
-  const scheduled = state.transactions.filter((t) => t.type === 'scheduled')
-  const daily = state.transactions.filter((t) => t.type === 'daily')
-  const income = state.transactions.filter((t) => t.type === 'income')
+  const data = query.data ?? EMPTY_PAGE
 
   return {
-    ...state,
-    scheduled,
-    daily,
-    income,
-    addTransaction,
-    updateTransaction,
-    confirmTransaction,
-    removeTransaction,
-    refetch: fetchTransactions,
+    transactions: data.data,
+    total: data.total,
+    page: data.page,
+    pageSize: data.pageSize,
+    hasMore: data.hasMore,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error ? (query.error as Error).message : null,
+    refetch: query.refetch,
+    addTransaction: (dto: CreateTransactionDTO) => addMutation.mutateAsync(dto),
+    updateTransaction: (id: string, dto: UpdateTransactionDTO) =>
+      updateMutation.mutateAsync({ id, dto }),
+    confirmTransaction: (id: string, confirmed: boolean) =>
+      confirmMutation.mutateAsync({ id, confirmed }),
+    removeTransaction: (id: string) => removeMutation.mutateAsync(id),
   }
+}
+
+// Backward compatible signature for components that fetch the entire month
+export function useTransactions(filter: MonthFilter & { quincena?: QuincenaFilter }) {
+  const result = useTransactionsQuery({ ...filter, page: 1, limit: 500 })
+  const scheduled = result.transactions.filter((t) => t.type === 'scheduled')
+  const daily = result.transactions.filter((t) => t.type === 'daily')
+  const income = result.transactions.filter((t) => t.type === 'income')
+  return { ...result, scheduled, daily, income }
 }

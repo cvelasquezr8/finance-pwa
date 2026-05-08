@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Shield, MoreHorizontal, MoreVertical, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { AdminUserDTO } from '@/core/dtos'
@@ -12,6 +11,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import {
+  DataTablePagination,
+  DataTableSearch,
+  MobilePagination,
+  SortableHeader,
+  SortDropdown,
+} from '@/components/ui/data-table'
+import { useDataTableState } from '@/lib/hooks/useDataTableState'
 
 const STATUS_STYLES: Record<AdminUserDTO['status'], string> = {
   active: 'bg-success/15 text-success',
@@ -31,8 +38,6 @@ type ActionProps = {
   onDelete: () => void
   onRestore: () => void
 }
-
-// ─── Actions dropdown (shared between table row and mobile card) ──────────────
 
 function ActionsMenu({
   user,
@@ -84,21 +89,16 @@ function ActionsMenu({
   )
 }
 
-// ─── Mobile card ──────────────────────────────────────────────────────────────
-
 function UserCard({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionProps) {
   const { t } = useTranslation()
   const isDeleted = user.status === 'deleted'
 
   return (
     <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
-      {/* Avatar */}
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary dark:bg-primary/30">
         {user.firstName[0]}
         {user.lastName[0]}
       </div>
-
-      {/* Content */}
       <div className="min-w-0 flex-1">
         <p
           className={cn(
@@ -139,8 +139,6 @@ function UserCard({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPr
           </span>
         </div>
       </div>
-
-      {/* Three-dot menu */}
       <ActionsMenu
         user={user}
         icon={MoreVertical}
@@ -152,8 +150,6 @@ function UserCard({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPr
     </div>
   )
 }
-
-// ─── Desktop table row ────────────────────────────────────────────────────────
 
 function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionProps) {
   const { t } = useTranslation()
@@ -180,13 +176,11 @@ function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPro
           </div>
         </div>
       </td>
-
       <td className="px-4 py-3">
         <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
           {user.alias}
         </span>
       </td>
-
       <td className="px-4 py-3">
         <span
           className={cn(
@@ -198,7 +192,6 @@ function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPro
           {user.role}
         </span>
       </td>
-
       <td className="px-4 py-3">
         <span
           className={cn('rounded-full px-2 py-0.5 text-xs font-medium', STATUS_STYLES[user.status])}
@@ -206,7 +199,6 @@ function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPro
           {t(`admin.status.${user.status}`)}
         </span>
       </td>
-
       <td className="px-4 py-3 text-xs text-muted-foreground">
         {new Date(user.createdAt).toLocaleDateString(undefined, {
           year: 'numeric',
@@ -214,7 +206,6 @@ function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPro
           day: 'numeric',
         })}
       </td>
-
       <td className="px-4 py-3">
         <ActionsMenu
           user={user}
@@ -229,16 +220,25 @@ function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPro
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export function AdminUsersPage() {
   const { t } = useTranslation()
-  const { users, isLoading, error, fetchUsers, toggleRole, blockUser, deleteUser, restoreUser } =
-    useAdminUsers()
-
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
+  const tableState = useDataTableState({
+    defaultSortBy: 'createdAt',
+    defaultOrder: 'desc',
+    defaultLimit: 10,
+  })
+  const {
+    users,
+    total,
+    isLoading,
+    isFetching,
+    error,
+    fetchUsers,
+    toggleRole,
+    blockUser,
+    deleteUser,
+    restoreUser,
+  } = useAdminUsers(tableState.query)
 
   const actionProps = (user: AdminUserDTO): ActionProps => ({
     user,
@@ -248,9 +248,16 @@ export function AdminUsersPage() {
     onRestore: () => restoreUser(user.id),
   })
 
+  const sortOptions = [
+    { field: 'name', label: t('admin.columns.user') },
+    { field: 'alias', label: t('admin.columns.alias') },
+    { field: 'role', label: t('admin.columns.role') },
+    { field: 'status', label: t('admin.columns.status') },
+    { field: 'createdAt', label: t('admin.columns.registered') },
+  ]
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">{t('admin.title')}</h1>
@@ -259,26 +266,24 @@ export function AdminUsersPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={fetchUsers}
-          disabled={isLoading}
+          onClick={() => fetchUsers()}
+          disabled={isFetching}
           className="gap-2"
         >
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
           <span className="hidden sm:inline">{t('admin.refresh')}</span>
         </Button>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: t('admin.totalUsers'), value: users.length },
+          { label: t('admin.totalUsers'), value: total },
           { label: t('admin.admins'), value: users.filter((u) => u.role === 'ADMIN').length },
           { label: t('admin.active'), value: users.filter((u) => u.status === 'active').length },
           { label: t('admin.blocked'), value: users.filter((u) => u.status === 'blocked').length },
@@ -290,43 +295,93 @@ export function AdminUsersPage() {
         ))}
       </div>
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <DataTableSearch value={tableState.search} onChange={tableState.setSearch} />
+        <div className="md:hidden">
+          <SortDropdown
+            options={sortOptions}
+            sortBy={tableState.sortBy}
+            order={tableState.order}
+            onSortChange={tableState.setSort}
+          />
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="flex items-center justify-center rounded-lg border border-border bg-card py-12 text-sm text-muted-foreground">
           {t('admin.loading')}
         </div>
       ) : users.length === 0 ? (
         <div className="flex items-center justify-center rounded-lg border border-border bg-card py-12 text-sm text-muted-foreground">
-          {t('admin.empty')}
+          {t('pagination.noResults')}
         </div>
       ) : (
         <>
-          {/* Mobile: card list (< md) */}
           <div className="flex flex-col gap-3 md:hidden">
             {users.map((user) => (
               <UserCard key={user.id} {...actionProps(user)} />
             ))}
+            <MobilePagination
+              page={tableState.page}
+              limit={tableState.limit}
+              total={total}
+              isLoading={isFetching}
+              onPageChange={tableState.setPage}
+              onLoadMore={() => tableState.setPage(tableState.page + 1)}
+              variant="compact"
+              className="rounded-lg border border-border bg-card"
+            />
           </div>
 
-          {/* Desktop: table (md+) */}
           <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-border bg-muted/40">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      {t('admin.columns.user')}
+                      <SortableHeader
+                        label={t('admin.columns.user')}
+                        field="name"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      {t('admin.columns.alias')}
+                      <SortableHeader
+                        label={t('admin.columns.alias')}
+                        field="alias"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      {t('admin.columns.role')}
+                      <SortableHeader
+                        label={t('admin.columns.role')}
+                        field="role"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      {t('admin.columns.status')}
+                      <SortableHeader
+                        label={t('admin.columns.status')}
+                        field="status"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      {t('admin.columns.registered')}
+                      <SortableHeader
+                        label={t('admin.columns.registered')}
+                        field="createdAt"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
                       {t('admin.columns.actions')}
@@ -340,6 +395,13 @@ export function AdminUsersPage() {
                 </tbody>
               </table>
             </div>
+            <DataTablePagination
+              page={tableState.page}
+              limit={tableState.limit}
+              total={total}
+              onPageChange={tableState.setPage}
+              onLimitChange={tableState.setLimit}
+            />
           </div>
         </>
       )}

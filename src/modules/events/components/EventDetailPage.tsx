@@ -14,6 +14,14 @@ import { transactionService } from '@/services/TransactionService'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { cn, getQuincena } from '@/lib/utils'
+import {
+  DataTablePagination,
+  DataTableSearch,
+  MobilePagination,
+  SortableHeader,
+  SortDropdown,
+} from '@/components/ui/data-table'
+import { useDataTableState } from '@/lib/hooks/useDataTableState'
 import type { AddTransactionFormValues } from '@/modules/transactions/schemas/transactionSchemas'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 
@@ -29,16 +37,24 @@ export function EventDetailPage() {
 
   const { cards } = useCards()
 
+  const tableState = useDataTableState({
+    defaultSortBy: 'createdAt',
+    defaultOrder: 'desc',
+    defaultLimit: 10,
+  })
+
   const {
     event,
     linkedTransactions,
+    transactionsTotal,
     isLoading,
+    isFetchingTransactions,
     error,
     inviteParticipant,
     respondInvitation,
     addShoppingItem,
     toggleShoppingItem,
-  } = useEventDetail(id ?? '')
+  } = useEventDetail(id ?? '', tableState.query)
 
   const now = new Date()
   const currentFilter: MonthFilter & { quincena: QuincenaFilter } = {
@@ -152,6 +168,12 @@ export function EventDetailPage() {
       maximumFractionDigits: 0,
     }).format(n)
 
+  const sortOptions = [
+    { field: 'createdAt', label: t('transactions.date') },
+    { field: 'description', label: t('events.columnDescription') },
+    { field: 'amount', label: t('events.columnAmount') },
+  ]
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
       {/* Header */}
@@ -226,43 +248,64 @@ export function EventDetailPage() {
       {/* Expense History */}
       <div className="rounded-xl border border-border bg-card p-4">
         <h2 className="mb-3 text-sm font-semibold">{t('events.expenseHistory')}</h2>
-        {linkedTransactions.length === 0 ? (
+
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <DataTableSearch value={tableState.search} onChange={tableState.setSearch} />
+          <div className="md:hidden">
+            <SortDropdown
+              options={sortOptions}
+              sortBy={tableState.sortBy}
+              order={tableState.order}
+              onSortChange={tableState.setSort}
+            />
+          </div>
+        </div>
+
+        {transactionsTotal === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            {t('events.noExpensesYet')}
+            {tableState.debouncedSearch ? t('pagination.noResults') : t('events.noExpensesYet')}
           </p>
         ) : (
           <>
             {/* Mobile: rich cards */}
             <div className="flex flex-col gap-2 md:hidden">
-              {[...linkedTransactions]
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-background/50 p-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{tx.description}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {new Date(tx.createdAt).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex-shrink-0 text-right">
-                      <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                        {fmt(tx.amount)}
-                      </p>
-                      <span className="mt-0.5 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
-                        {tx.userId
-                          ? (participantAliases[tx.userId] ?? tx.userId)
-                          : t('events.unknownUser')}
-                      </span>
-                    </div>
+              {linkedTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-background/50 p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{tx.description}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {new Date(tx.createdAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </p>
                   </div>
-                ))}
+                  <div className="flex-shrink-0 text-right">
+                    <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                      {fmt(tx.amount)}
+                    </p>
+                    <span className="mt-0.5 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                      {tx.userId
+                        ? (participantAliases[tx.userId] ?? tx.userId)
+                        : t('events.unknownUser')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <MobilePagination
+                page={tableState.page}
+                limit={tableState.limit}
+                total={transactionsTotal}
+                isLoading={isFetchingTransactions}
+                onPageChange={tableState.setPage}
+                onLoadMore={() => tableState.setPage(tableState.page + 1)}
+                variant="load-more"
+                className="rounded-lg"
+              />
             </div>
 
             {/* Desktop: compact table */}
@@ -271,51 +314,73 @@ export function EventDetailPage() {
                 <thead className="border-b border-border bg-muted/40">
                   <tr>
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                      {t('events.columnDate')}
+                      <SortableHeader
+                        label={t('events.columnDate')}
+                        field="createdAt"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                       {t('events.columnUser')}
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                      {t('events.columnDescription')}
+                      <SortableHeader
+                        label={t('events.columnDescription')}
+                        field="description"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                      />
                     </th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
-                      {t('events.columnAmount')}
+                      <SortableHeader
+                        label={t('events.columnAmount')}
+                        field="amount"
+                        active={tableState.sortBy}
+                        order={tableState.order}
+                        onSort={tableState.toggleSort}
+                        align="right"
+                      />
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...linkedTransactions]
-                    .sort(
-                      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                    )
-                    .map((tx) => (
-                      <tr
-                        key={tx.id}
-                        className="border-b border-border transition-colors last:border-0 hover:bg-muted/20"
-                      >
-                        <td className="px-3 py-2 text-xs text-muted-foreground">
-                          {new Date(tx.createdAt).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                            {tx.userId
-                              ? (participantAliases[tx.userId] ?? tx.userId)
-                              : t('events.unknownUser')}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-xs">{tx.description}</td>
-                        <td className="px-3 py-2 text-right text-xs font-semibold text-amber-600 dark:text-amber-400">
-                          {fmt(tx.amount)}
-                        </td>
-                      </tr>
-                    ))}
+                  {linkedTransactions.map((tx) => (
+                    <tr
+                      key={tx.id}
+                      className="border-b border-border transition-colors last:border-0 hover:bg-muted/20"
+                    >
+                      <td className="px-3 py-2 text-xs text-muted-foreground">
+                        {new Date(tx.createdAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                          {tx.userId
+                            ? (participantAliases[tx.userId] ?? tx.userId)
+                            : t('events.unknownUser')}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-xs">{tx.description}</td>
+                      <td className="px-3 py-2 text-right text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        {fmt(tx.amount)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
+              <DataTablePagination
+                page={tableState.page}
+                limit={tableState.limit}
+                total={transactionsTotal}
+                onPageChange={tableState.setPage}
+                onLimitChange={tableState.setLimit}
+              />
             </div>
           </>
         )}
@@ -356,7 +421,9 @@ export function EventDetailPage() {
             await addShoppingItem(dto)
             toast({ title: t('events.addItemSuccess') })
           }}
-          onToggleItem={toggleShoppingItem}
+          onToggleItem={async (dto) => {
+            await toggleShoppingItem(dto)
+          }}
           participantAliases={participantAliases}
         />
       </div>

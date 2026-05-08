@@ -13,6 +13,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  DataTablePagination,
+  DataTableSearch,
+  MobilePagination,
+  SortDropdown,
+  type SortOption,
+} from '@/components/ui/data-table'
+import { useDataTableState } from '@/lib/hooks/useDataTableState'
 import { formatCurrency, CATEGORY_LABELS } from '@/lib/utils'
 import type { UpdateTransactionDTO } from '@/core/dtos'
 
@@ -289,7 +297,14 @@ function defaultFilters(): HistoryFilters {
 export function HistoryPage() {
   const { t } = useTranslation()
   const [filters, setFilters] = useState<HistoryFilters>(defaultFilters)
-  const { grouped, isLoading, updateTransaction, removeTransaction } = useHistory(filters)
+  const tableState = useDataTableState({
+    defaultSortBy: 'date',
+    defaultOrder: 'desc',
+    defaultLimit: 20,
+  })
+
+  const { grouped, total, isLoading, isFetching, updateTransaction, removeTransaction } =
+    useHistory(filters, tableState.query)
 
   const months = t('months', { returnObjects: true }) as string[]
 
@@ -300,6 +315,13 @@ export function HistoryPage() {
 
   const rangeLabel = `${months[filters.fromMonth - 1]} ${filters.fromYear} — ${months[filters.toMonth - 1]} ${filters.toYear}`
 
+  const sortOptions: SortOption[] = [
+    { field: 'date', label: t('transactions.date') },
+    { field: 'amount', label: t('transactions.amount') },
+    { field: 'description', label: t('transactions.description') },
+    { field: 'category', label: t('transactions.category') },
+  ]
+
   return (
     <div className="space-y-6 p-4 lg:p-6">
       <div>
@@ -309,9 +331,27 @@ export function HistoryPage() {
         <p className="text-sm text-muted-foreground">{rangeLabel}</p>
       </div>
 
-      <FilterBar filters={filters} onChange={setFilters} />
+      <FilterBar
+        filters={filters}
+        onChange={(f) => {
+          setFilters(f)
+          tableState.resetPage()
+        }}
+      />
 
-      {!isLoading && grouped.length > 0 && (
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <DataTableSearch value={tableState.search} onChange={tableState.setSearch} />
+        <div className="md:hidden">
+          <SortDropdown
+            options={sortOptions}
+            sortBy={tableState.sortBy}
+            order={tableState.order}
+            onSortChange={tableState.setSort}
+          />
+        </div>
+      </div>
+
+      {!isLoading && total > 0 && (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             {
@@ -361,21 +401,44 @@ export function HistoryPage() {
         Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="h-16 animate-pulse rounded-xl border border-border bg-muted/20" />
         ))
-      ) : grouped.length === 0 ? (
+      ) : total === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
           <History className="h-10 w-10 opacity-30" />
-          <p>{t('history.empty')}</p>
+          <p>{tableState.debouncedSearch ? t('pagination.noResults') : t('history.empty')}</p>
           <p className="text-xs">{rangeLabel}</p>
         </div>
       ) : (
-        grouped.map((g) => (
-          <MonthGroup
-            key={`${g.year}-${g.month}`}
-            group={g}
-            onEdit={updateTransaction}
-            onDelete={removeTransaction}
-          />
-        ))
+        <>
+          {grouped.map((g) => (
+            <MonthGroup
+              key={`${g.year}-${g.month}`}
+              group={g}
+              onEdit={updateTransaction}
+              onDelete={removeTransaction}
+            />
+          ))}
+
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <DataTablePagination
+              page={tableState.page}
+              limit={tableState.limit}
+              total={total}
+              onPageChange={tableState.setPage}
+              onLimitChange={tableState.setLimit}
+              className="border-t-0"
+            />
+            <MobilePagination
+              page={tableState.page}
+              limit={tableState.limit}
+              total={total}
+              isLoading={isFetching}
+              onPageChange={tableState.setPage}
+              onLoadMore={() => tableState.setPage(tableState.page + 1)}
+              variant="load-more"
+              className="border-t-0"
+            />
+          </div>
+        </>
       )}
     </div>
   )

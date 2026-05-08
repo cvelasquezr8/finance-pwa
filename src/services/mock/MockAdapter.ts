@@ -30,6 +30,7 @@ import type {
 } from '@/core/types'
 import { getDaysInMonth } from 'date-fns'
 import { getIdempotentResult, setIdempotentResult } from '@/lib/idempotency'
+import { applyPagination, type PaginationParams } from './paginate'
 
 const delay = (ms = 800) => new Promise<void>((r) => setTimeout(r, ms))
 
@@ -696,37 +697,90 @@ export const mockAuthService = {
 
 // ─── Transactions ─────────────────────────────────────────────────────────────
 
+const TRANSACTION_SORT_ACCESSORS = {
+  date: (t: TransactionResponseDTO) => t.year * 10000 + t.month * 100 + t.dueDay,
+  amount: (t: TransactionResponseDTO) => t.amount,
+  description: (t: TransactionResponseDTO) => t.description.toLowerCase(),
+  category: (t: TransactionResponseDTO) => t.category,
+  status: (t: TransactionResponseDTO) => t.status,
+  createdAt: (t: TransactionResponseDTO) => new Date(t.createdAt),
+} as const
+
+const TRANSACTION_SEARCH_FIELDS = [
+  (t: TransactionResponseDTO) => t.description,
+  (t: TransactionResponseDTO) => t.category,
+] as const
+
 export const mockTransactionService = {
   async list(
-    filter: MonthFilter & { quincena?: QuincenaFilter }
+    filter: MonthFilter & {
+      quincena?: QuincenaFilter
+      type?: 'scheduled' | 'daily' | 'income' | 'all'
+      cardId?: string | null
+    } & PaginationParams
   ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     await delay()
     const isMensual = filter.quincena === 'mensual'
-    const data = mockTransactions.filter(
-      (t) =>
-        t.month === filter.month &&
-        t.year === filter.year &&
-        (isMensual || !filter.quincena || t.quincena === filter.quincena)
-    )
-    return { data, total: data.length, page: 1, pageSize: 100, hasMore: false }
+    const filtered = mockTransactions.filter((t) => {
+      if (t.month !== filter.month || t.year !== filter.year) return false
+      if (filter.quincena && !isMensual && t.quincena !== filter.quincena) return false
+      if (filter.type && filter.type !== 'all' && t.type !== filter.type) return false
+      if (filter.cardId === 'cc-only' && !t.isCC) return false
+      if (
+        filter.cardId &&
+        filter.cardId !== 'all' &&
+        filter.cardId !== 'cc-only' &&
+        t.cardId !== filter.cardId
+      )
+        return false
+      return true
+    })
+    return applyPagination(filtered, filter, {
+      searchFields: [...TRANSACTION_SEARCH_FIELDS],
+      sortAccessors: TRANSACTION_SORT_ACCESSORS,
+      defaultSortBy: 'date',
+      defaultOrder: 'asc',
+    })
   },
 
-  async listHistory(filters: {
-    year: number
-    type?: 'scheduled' | 'daily' | 'income' | 'all'
-    category?: string
-  }): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
+  async listHistory(
+    filters: {
+      fromMonth?: number
+      fromYear?: number
+      toMonth?: number
+      toYear?: number
+      year?: number
+      type?: 'scheduled' | 'daily' | 'income' | 'all'
+      category?: string
+    } & PaginationParams
+  ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     await delay()
-    const data = mockTransactions
-      .filter((t) => {
-        if (t.year !== filters.year) return false
-        if (filters.type && filters.type !== 'all' && t.type !== filters.type) return false
-        if (filters.category && filters.category !== 'all' && t.category !== filters.category)
-          return false
-        return true
-      })
-      .sort((a, b) => a.month - b.month || a.dueDay - b.dueDay)
-    return { data, total: data.length, page: 1, pageSize: 500, hasMore: false }
+    const toKey = (year: number, month: number) => year * 100 + month
+    const filtered = mockTransactions.filter((t) => {
+      if (filters.year != null && t.year !== filters.year) return false
+      if (
+        filters.fromYear != null &&
+        filters.fromMonth != null &&
+        toKey(t.year, t.month) < toKey(filters.fromYear, filters.fromMonth)
+      )
+        return false
+      if (
+        filters.toYear != null &&
+        filters.toMonth != null &&
+        toKey(t.year, t.month) > toKey(filters.toYear, filters.toMonth)
+      )
+        return false
+      if (filters.type && filters.type !== 'all' && t.type !== filters.type) return false
+      if (filters.category && filters.category !== 'all' && t.category !== filters.category)
+        return false
+      return true
+    })
+    return applyPagination(filtered, filters, {
+      searchFields: [...TRANSACTION_SEARCH_FIELDS],
+      sortAccessors: TRANSACTION_SORT_ACCESSORS,
+      defaultSortBy: 'date',
+      defaultOrder: 'desc',
+    })
   },
 
   async create(
@@ -842,10 +896,25 @@ export const mockCardService = {
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
+const ADMIN_SORT_ACCESSORS = {
+  name: (u: AdminUserDTO) => u.name.toLowerCase(),
+  email: (u: AdminUserDTO) => u.email.toLowerCase(),
+  alias: (u: AdminUserDTO) => u.alias.toLowerCase(),
+  role: (u: AdminUserDTO) => u.role,
+  status: (u: AdminUserDTO) => u.status,
+  createdAt: (u: AdminUserDTO) => new Date(u.createdAt),
+} as const
+
 export const mockAdminService = {
-  async listUsers(): Promise<AdminUserDTO[]> {
+  async listUsers(query: PaginationParams = {}): Promise<PaginatedResponseDTO<AdminUserDTO>> {
     await delay()
-    return mockUsers.map(({ password: _p, ...rest }) => rest)
+    const all = mockUsers.map(({ password: _p, ...rest }) => rest)
+    return applyPagination(all, query, {
+      searchFields: [(u) => u.name, (u) => u.email, (u) => u.alias],
+      sortAccessors: ADMIN_SORT_ACCESSORS,
+      defaultSortBy: 'createdAt',
+      defaultOrder: 'desc',
+    })
   },
 
   async updateRole(dto: UpdateUserRoleDTO): Promise<AdminUserDTO> {
@@ -1079,8 +1148,17 @@ export const mockEventService = {
     event.updatedAt = iso()
   },
 
-  async getLinkedTransactions(eventId: string): Promise<TransactionResponseDTO[]> {
+  async getLinkedTransactions(
+    eventId: string,
+    query: PaginationParams = {}
+  ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
     await delay(300)
-    return mockTransactions.filter((t) => t.eventId === eventId)
+    const filtered = mockTransactions.filter((t) => t.eventId === eventId)
+    return applyPagination(filtered, query, {
+      searchFields: [...TRANSACTION_SEARCH_FIELDS],
+      sortAccessors: TRANSACTION_SORT_ACCESSORS,
+      defaultSortBy: 'createdAt',
+      defaultOrder: 'desc',
+    })
   },
 }

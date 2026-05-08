@@ -12,10 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { SortableHeader } from '@/components/ui/data-table'
 import { ReceiptCell } from './ReceiptCell'
 import { EditTransactionModal } from './EditTransactionModal'
 import { formatCurrency, CATEGORY_COLORS } from '@/lib/utils'
 import type { TransactionResponseDTO, UpdateTransactionDTO, CardDTO } from '@/core/dtos'
+import type { SortOrder } from '@/lib/hooks/useDataTableState'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -29,17 +31,16 @@ interface Props {
   showConfirmColumn?: boolean
   showReceiptColumn?: boolean
   readOnly?: boolean
+  sortBy?: string
+  order?: SortOrder
+  onSort?: (field: string) => void
 }
-
-// ── Shared sub-types ──────────────────────────────────────────────────────────
 
 interface RowActions {
   onConfirm: (id: string, confirmed: boolean) => void
   onEditClick: (tx: TransactionResponseDTO) => void
   onDelete: (id: string) => void
 }
-
-// ── Desktop skeleton ──────────────────────────────────────────────────────────
 
 function SkeletonRow({ cols }: { cols: number }) {
   return (
@@ -52,8 +53,6 @@ function SkeletonRow({ cols }: { cols: number }) {
     </tr>
   )
 }
-
-// ── Mobile skeleton ───────────────────────────────────────────────────────────
 
 function MobileSkeletonRow() {
   return (
@@ -69,8 +68,6 @@ function MobileSkeletonRow() {
     </div>
   )
 }
-
-// ── Mobile list row ───────────────────────────────────────────────────────────
 
 interface MobileRowProps extends RowActions {
   tx: TransactionResponseDTO
@@ -106,7 +103,6 @@ function MobileTransactionRow({
         tx.status === 'confirmed' && 'bg-emerald-500/5 dark:bg-emerald-500/10'
       )}
     >
-      {/* Confirmation toggle */}
       {showConfirm && !readOnly && (
         <Checkbox
           checked={tx.status === 'confirmed'}
@@ -116,7 +112,6 @@ function MobileTransactionRow({
         />
       )}
 
-      {/* Left — description + category */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-medium">{tx.description}</p>
@@ -139,7 +134,6 @@ function MobileTransactionRow({
         </span>
       </div>
 
-      {/* Right — amount + status badge + card chip */}
       <div className="flex flex-shrink-0 flex-col items-end gap-1">
         <div className="flex items-center gap-1.5">
           {tx.isCC &&
@@ -173,7 +167,6 @@ function MobileTransactionRow({
         </Badge>
       </div>
 
-      {/* Three-dot action menu */}
       {!readOnly && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -206,10 +199,8 @@ function MobileTransactionRow({
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
 export function TransactionTable({
-  transactions: initialTx,
+  transactions,
   cards,
   isLoading,
   onConfirm,
@@ -219,10 +210,11 @@ export function TransactionTable({
   showConfirmColumn = true,
   showReceiptColumn = false,
   readOnly = false,
+  sortBy,
+  order,
+  onSort,
 }: Props) {
   const { t } = useTranslation()
-  const [rows, setRows] = useState<TransactionResponseDTO[]>([])
-  const [initialized, setInitialized] = useState(false)
   const [editingTx, setEditingTx] = useState<TransactionResponseDTO | null>(null)
 
   const cardMap = useMemo(() => {
@@ -231,25 +223,8 @@ export function TransactionTable({
     return map
   }, [cards])
 
-  if (!initialized && initialTx.length > 0) {
-    setRows(initialTx)
-    setInitialized(true)
-  }
-  if (initialized && initialTx.length !== rows.length) {
-    setRows(initialTx)
-  }
-
-  const transactions = initialized ? rows : initialTx
-
-  // ── Shared action handlers (used by both table row and mobile row) ──────────
-
-  const handleReceiptUploaded = (id: string, receiptUrl: string) => {
-    setRows((prev) => prev.map((tx) => (tx.id === id ? { ...tx, receiptUrl } : tx)))
-  }
-
   const handleEdit = async (id: string, dto: UpdateTransactionDTO) => {
     await onEdit(id, dto)
-    setRows((prev) => prev.map((tx) => (tx.id === id ? { ...tx, ...dto } : tx)))
   }
 
   const rowActions: RowActions = {
@@ -264,26 +239,54 @@ export function TransactionTable({
   const totalAmount = transactions.reduce((s, tx) => s + tx.amount, 0)
   const isIncome = transactions[0]?.type === 'income'
 
+  const sortableProps = onSort && sortBy && order ? { active: sortBy, order, onSort } : null
+
   return (
     <>
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </h3>
+        {title && (
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            {title}
+          </h3>
+        )}
 
-        {/* ── Desktop Table (md+) ──────────────────────────────────────────── */}
         <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {t('transactions.description')}
+                  {sortableProps ? (
+                    <SortableHeader
+                      label={t('transactions.description')}
+                      field="description"
+                      {...sortableProps}
+                    />
+                  ) : (
+                    t('transactions.description')
+                  )}
                 </th>
                 <th className="hidden px-4 py-3 text-left font-medium text-muted-foreground sm:table-cell">
-                  {t('transactions.category')}
+                  {sortableProps ? (
+                    <SortableHeader
+                      label={t('transactions.category')}
+                      field="category"
+                      {...sortableProps}
+                    />
+                  ) : (
+                    t('transactions.category')
+                  )}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t('transactions.amount')}
+                  {sortableProps ? (
+                    <SortableHeader
+                      label={t('transactions.amount')}
+                      field="amount"
+                      align="right"
+                      {...sortableProps}
+                    />
+                  ) : (
+                    t('transactions.amount')
+                  )}
                 </th>
                 {showConfirmColumn && (
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">
@@ -291,7 +294,16 @@ export function TransactionTable({
                   </th>
                 )}
                 <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                  {t('transactions.status')}
+                  {sortableProps ? (
+                    <SortableHeader
+                      label={t('transactions.status')}
+                      field="status"
+                      align="center"
+                      {...sortableProps}
+                    />
+                  ) : (
+                    t('transactions.status')
+                  )}
                 </th>
                 <th className="hidden px-4 py-3 text-center font-medium text-muted-foreground sm:table-cell">
                   CC
@@ -310,7 +322,7 @@ export function TransactionTable({
               ) : transactions.length === 0 ? (
                 <tr>
                   <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
-                    {t('transactions.empty')}
+                    {t('pagination.noResults')}
                   </td>
                 </tr>
               ) : (
@@ -404,9 +416,6 @@ export function TransactionTable({
                           transactionId={tx.id}
                           description={tx.description}
                           receiptUrl={tx.receiptUrl}
-                          onUploaded={
-                            readOnly ? undefined : (url) => handleReceiptUploaded(tx.id, url)
-                          }
                           readOnly={readOnly}
                         />
                       </td>
@@ -473,7 +482,6 @@ export function TransactionTable({
           </table>
         </div>
 
-        {/* ── Mobile Rich List (<md) ───────────────────────────────────────── */}
         <div className="overflow-hidden rounded-lg border border-border md:hidden">
           {isLoading ? (
             <div className="divide-y divide-border">
@@ -483,7 +491,7 @@ export function TransactionTable({
             </div>
           ) : transactions.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              {t('transactions.empty')}
+              {t('pagination.noResults')}
             </p>
           ) : (
             <>
@@ -522,7 +530,6 @@ export function TransactionTable({
         </div>
       </div>
 
-      {/* Shared modal — triggered from both desktop and mobile rows */}
       <EditTransactionModal
         transaction={editingTx}
         cards={cards}

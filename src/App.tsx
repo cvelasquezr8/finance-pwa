@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AuthPage } from '@/modules/auth/components/AuthPage'
@@ -45,47 +46,59 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
+
 export function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true }}>
-        <Routes>
-          <Route
-            path="/auth"
-            element={
-              <PublicRoute>
-                <AuthPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            element={
-              <ProtectedRoute>
-                <NotificationProvider>
-                  <AppLayout />
-                </NotificationProvider>
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<DashboardPage />} />
-            <Route path="transactions" element={<TransactionsPage />} />
-            <Route path="history" element={<HistoryPage />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="cards" element={<MyCardsPage />} />
-            <Route path="events" element={<EventsPage />} />
-            <Route path="events/:id" element={<EventDetailPage />} />
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter future={{ v7_startTransition: true }}>
+          <Routes>
             <Route
-              path="admin/users"
+              path="/auth"
               element={
-                <AdminRoute>
-                  <AdminUsersPage />
-                </AdminRoute>
+                <PublicRoute>
+                  <AuthPage />
+                </PublicRoute>
               }
             />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <NotificationProvider>
+                    <AppLayout />
+                  </NotificationProvider>
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<DashboardPage />} />
+              <Route path="transactions" element={<TransactionsPage />} />
+              <Route path="history" element={<HistoryPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="cards" element={<MyCardsPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="events/:id" element={<EventDetailPage />} />
+              <Route
+                path="admin/users"
+                element={
+                  <AdminRoute>
+                    <AdminUsersPage />
+                  </AdminRoute>
+                }
+              />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }

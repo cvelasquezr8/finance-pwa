@@ -1,83 +1,69 @@
-import { useCallback, useReducer } from 'react'
-import type { AdminUserDTO } from '@/core/dtos'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import type { AdminUserDTO, PaginatedResponseDTO, PaginationQueryDTO } from '@/core/dtos'
 import { adminService } from '@/services/AdminService'
 
-interface State {
-  users: AdminUserDTO[]
-  isLoading: boolean
-  error: string | null
+const EMPTY_PAGE: PaginatedResponseDTO<AdminUserDTO> = {
+  data: [],
+  total: 0,
+  page: 1,
+  pageSize: 10,
+  hasMore: false,
 }
 
-type Action =
-  | { type: 'FETCH_START' }
-  | { type: 'FETCH_SUCCESS'; users: AdminUserDTO[] }
-  | { type: 'FETCH_ERROR'; error: string }
-  | { type: 'UPDATE_USER'; user: AdminUserDTO }
+export function useAdminUsers(query: PaginationQueryDTO = {}) {
+  const queryClient = useQueryClient()
 
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'FETCH_START':
-      return { ...state, isLoading: true, error: null }
-    case 'FETCH_SUCCESS':
-      return { ...state, isLoading: false, users: action.users }
-    case 'FETCH_ERROR':
-      return { ...state, isLoading: false, error: action.error }
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        users: state.users.map((u) => (u.id === action.user.id ? action.user : u)),
-      }
+  const usersQuery = useQuery({
+    queryKey: ['admin', 'users', query],
+    queryFn: () => adminService.listUsers(query),
+    placeholderData: keepPreviousData,
+  })
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['admin', 'users'], exact: false })
+
+  const toggleRoleMutation = useMutation({
+    mutationFn: (user: AdminUserDTO) => adminService.toggleRole(user.id, user.role),
+    onSuccess: invalidate,
+  })
+
+  const blockMutation = useMutation({
+    mutationFn: (userId: string) => adminService.blockUser(userId),
+    onSuccess: invalidate,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId: string) => adminService.deleteUser(userId),
+    onSuccess: invalidate,
+  })
+
+  const restoreMutation = useMutation({
+    mutationFn: (userId: string) => adminService.restoreUser(userId),
+    onSuccess: invalidate,
+  })
+
+  const data = usersQuery.data ?? EMPTY_PAGE
+  const error = usersQuery.error
+    ? (usersQuery.error as Error).message
+    : ((toggleRoleMutation.error as Error | null)?.message ??
+      (blockMutation.error as Error | null)?.message ??
+      (deleteMutation.error as Error | null)?.message ??
+      (restoreMutation.error as Error | null)?.message ??
+      null)
+
+  return {
+    users: data.data,
+    total: data.total,
+    page: data.page,
+    pageSize: data.pageSize,
+    hasMore: data.hasMore,
+    isLoading: usersQuery.isLoading,
+    isFetching: usersQuery.isFetching,
+    error,
+    fetchUsers: () => usersQuery.refetch(),
+    toggleRole: (user: AdminUserDTO) => toggleRoleMutation.mutateAsync(user),
+    blockUser: (userId: string) => blockMutation.mutateAsync(userId),
+    deleteUser: (userId: string) => deleteMutation.mutateAsync(userId),
+    restoreUser: (userId: string) => restoreMutation.mutateAsync(userId),
   }
-}
-
-export function useAdminUsers() {
-  const [state, dispatch] = useReducer(reducer, { users: [], isLoading: false, error: null })
-
-  const fetchUsers = useCallback(async () => {
-    dispatch({ type: 'FETCH_START' })
-    try {
-      const users = await adminService.listUsers()
-      dispatch({ type: 'FETCH_SUCCESS', users })
-    } catch (e) {
-      dispatch({ type: 'FETCH_ERROR', error: e instanceof Error ? e.message : 'Error desconocido' })
-    }
-  }, [])
-
-  const toggleRole = useCallback(async (user: AdminUserDTO) => {
-    try {
-      const updated = await adminService.toggleRole(user.id, user.role)
-      dispatch({ type: 'UPDATE_USER', user: updated })
-    } catch (e) {
-      dispatch({ type: 'FETCH_ERROR', error: e instanceof Error ? e.message : 'Error desconocido' })
-    }
-  }, [])
-
-  const blockUser = useCallback(async (userId: string) => {
-    try {
-      const updated = await adminService.blockUser(userId)
-      dispatch({ type: 'UPDATE_USER', user: updated })
-    } catch (e) {
-      dispatch({ type: 'FETCH_ERROR', error: e instanceof Error ? e.message : 'Error desconocido' })
-    }
-  }, [])
-
-  const deleteUser = useCallback(async (userId: string) => {
-    try {
-      const updated = await adminService.deleteUser(userId)
-      dispatch({ type: 'UPDATE_USER', user: updated })
-    } catch (e) {
-      dispatch({ type: 'FETCH_ERROR', error: e instanceof Error ? e.message : 'Error desconocido' })
-    }
-  }, [])
-
-  const restoreUser = useCallback(async (userId: string) => {
-    try {
-      const updated = await adminService.restoreUser(userId)
-      dispatch({ type: 'UPDATE_USER', user: updated })
-    } catch (e) {
-      dispatch({ type: 'FETCH_ERROR', error: e instanceof Error ? e.message : 'Error desconocido' })
-    }
-  }, [])
-
-  return { ...state, fetchUsers, toggleRole, blockUser, deleteUser, restoreUser }
 }

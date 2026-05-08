@@ -137,6 +137,7 @@
     "description": "Descripción",
     "category": "Categoría",
     "amount": "Monto",
+    "date": "Fecha",
     "confirmedColumn": "Confirmado",
     "status": "Estado",
     "receipt": "Comprobante",
@@ -147,9 +148,25 @@
     "confirmExpense": "Confirmar gasto",
     "deleteAria": "Eliminar",
     "editAria": "Editar",
+    "actionsAria": "Acciones",
     "empty": "Sin gastos registrados",
     "ccTooltip": "Tarjeta de Crédito — no afecta saldo bancario",
     "total": "Total"
+  },
+  "pagination": {
+    "rowsPerPage": "Filas por página",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "loadMore": "Cargar más",
+    "loading": "Cargando…",
+    "pageOf": "Página {{page}} de {{total}}",
+    "showing": "Mostrando {{from}}–{{to}} de {{total}}",
+    "records": "registros",
+    "noResults": "Sin resultados",
+    "searchPlaceholder": "Buscar…",
+    "sortBy": "Ordenar por",
+    "sortAsc": "Ascendente",
+    "sortDesc": "Descendente"
   },
   "addTransaction": {
     "triggerLabel": "Agregar Transacción",
