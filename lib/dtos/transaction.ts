@@ -3,7 +3,7 @@ import type {
   TransactionType,
   TransactionStatus,
   QuincenaType,
-} from '@/lib/types/transaction'
+} from '../types/transaction'
 
 export interface CreateTransactionDTO {
   description: string

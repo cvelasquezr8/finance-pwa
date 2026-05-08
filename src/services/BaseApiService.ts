@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import { resolveBaseUrl } from './api-config'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+const BASE_URL = resolveBaseUrl()
 const TOKEN_KEY = 'finance_token'
 const REFRESH_KEY = 'finance_refresh'
 

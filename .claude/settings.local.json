@@ -15,7 +15,16 @@
       "Bash(node -e \"require\\('prettier-plugin-tailwindcss'\\); console.log\\('prettier-plugin-tailwindcss OK'\\)\")",
       "Bash(npx vite *)",
       "Bash(Get-ChildItem \"D:\\\\Projects\\\\Projects\\\\finance-project\\\\finance-pwa\\\\src\" -Recurse -Filter \"*.tsx\" -File)",
-      "Bash(Select-Object -First 20 FullName)"
+      "Bash(Select-Object -First 20 FullName)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Projects\\\\finance-project\\\\finance-pwa\" -Recurse -Directory)",
+      "Bash(Select-Object -First 30)",
+      "Bash(Format-List FullName)",
+      "PowerShell(Head *)",
+      "Bash(npx eslint *)",
+      "Bash(Select-String -Pattern \"eslint|lint|tsc\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Projects\\\\finance-project\\\\finance-pwa\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(npm run *)"
     ]
   }
 }

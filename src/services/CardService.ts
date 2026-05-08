@@ -1,28 +1,28 @@
 import { BaseApiService } from './BaseApiService'
 import { mockCardService } from './mock/MockAdapter'
+import { useMock } from './api-config'
+import { API_ROUTES } from './api-routes'
 import type { CardDTO, CreateCardDTO } from '@/core/dtos'
-
-const USE_MOCK = true
 
 class CardService extends BaseApiService {
   async listCards(userId: string): Promise<CardDTO[]> {
-    if (USE_MOCK) return mockCardService.listCards(userId)
-    return this.get(`/cards?userId=${userId}`)
+    if (useMock()) return mockCardService.listCards(userId)
+    return this.get(API_ROUTES.cards.list, { params: { userId } })
   }
 
   async createCard(userId: string, dto: CreateCardDTO): Promise<CardDTO> {
-    if (USE_MOCK) return mockCardService.createCard(userId, dto)
-    return this.post('/cards', { ...dto, userId })
+    if (useMock()) return mockCardService.createCard(userId, dto)
+    return this.post(API_ROUTES.cards.list, { ...dto, userId })
   }
 
   async deleteCard(id: string): Promise<void> {
-    if (USE_MOCK) return mockCardService.deleteCard(id)
-    return this.delete(`/cards/${id}`)
+    if (useMock()) return mockCardService.deleteCard(id)
+    return this.delete(API_ROUTES.cards.byId(id))
   }
 
   async updateCard(id: string, dto: Partial<CreateCardDTO>): Promise<CardDTO> {
-    if (USE_MOCK) return mockCardService.updateCard(id, dto)
-    return this.put(`/cards/${id}`, dto)
+    if (useMock()) return mockCardService.updateCard(id, dto)
+    return this.put(API_ROUTES.cards.byId(id), dto)
   }
 }
 

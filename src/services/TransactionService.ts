@@ -1,5 +1,7 @@
 import { BaseApiService } from './BaseApiService'
 import { mockTransactionService, mockBalanceService } from './mock/MockAdapter'
+import { useMock } from './api-config'
+import { API_ROUTES } from './api-routes'
 import type {
   CreateTransactionDTO,
   UpdateTransactionDTO,
@@ -13,22 +15,19 @@ import type {
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import { generateKey } from '@/lib/idempotency'
 
-const USE_MOCK = true
-
 class TransactionService extends BaseApiService {
   async list(
     filter: MonthFilter & { quincena?: QuincenaFilter }
   ): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
-    if (USE_MOCK) return mockTransactionService.list(filter)
-    // GET /api/v1/transactions?month=&year=&quincena=
-    return this.get('/transactions', { params: filter })
+    if (useMock()) return mockTransactionService.list(filter)
+    return this.get(API_ROUTES.transactions.list, { params: filter })
   }
 
   async create(dto: CreateTransactionDTO): Promise<TransactionResponseDTO> {
     const key = generateKey()
-    if (USE_MOCK) return mockTransactionService.create({ ...dto, idempotencyKey: key })
+    if (useMock()) return mockTransactionService.create({ ...dto, idempotencyKey: key })
     return this.post(
-      '/transactions',
+      API_ROUTES.transactions.create,
       {
         ...dto,
         status: dto.type === 'daily' ? 'confirmed' : 'pending',
@@ -38,15 +37,13 @@ class TransactionService extends BaseApiService {
   }
 
   async confirm(dto: ConfirmTransactionDTO): Promise<TransactionResponseDTO> {
-    if (USE_MOCK) return mockTransactionService.confirm(dto)
-    // PATCH /api/v1/transactions/:id/confirm
-    return this.patch(`/transactions/${dto.transactionId}/confirm`, dto)
+    if (useMock()) return mockTransactionService.confirm(dto)
+    return this.patch(API_ROUTES.transactions.confirm(dto.transactionId), dto)
   }
 
   async remove(id: string): Promise<void> {
-    if (USE_MOCK) return mockTransactionService.remove(id)
-    // DELETE /api/v1/transactions/:id
-    return this.delete(`/transactions/${id}`)
+    if (useMock()) return mockTransactionService.remove(id)
+    return this.delete(API_ROUTES.transactions.byId(id))
   }
 
   async listHistory(filters: {
@@ -54,23 +51,23 @@ class TransactionService extends BaseApiService {
     type?: 'scheduled' | 'daily' | 'income' | 'all'
     category?: string
   }): Promise<PaginatedResponseDTO<TransactionResponseDTO>> {
-    if (USE_MOCK) return mockTransactionService.listHistory(filters)
-    // GET /api/v1/transactions/history?year=&type=&category=
-    return this.get('/transactions/history', { params: filters })
+    if (useMock()) return mockTransactionService.listHistory(filters)
+    return this.get(API_ROUTES.transactions.history, { params: filters })
   }
 
   async update(id: string, dto: UpdateTransactionDTO): Promise<TransactionResponseDTO> {
     const key = generateKey()
-    if (USE_MOCK) return mockTransactionService.update(id, { ...dto, idempotencyKey: key })
-    return this.put(`/transactions/${id}`, dto, { headers: { 'x-idempotency-key': key } })
+    if (useMock()) return mockTransactionService.update(id, { ...dto, idempotencyKey: key })
+    return this.put(API_ROUTES.transactions.byId(id), dto, {
+      headers: { 'x-idempotency-key': key },
+    })
   }
 
   async uploadReceipt(id: string, file: File): Promise<TransactionResponseDTO> {
-    if (USE_MOCK) return mockTransactionService.uploadReceipt(id, file)
-    // POST /api/v1/transactions/:id/receipt  (multipart/form-data)
+    if (useMock()) return mockTransactionService.uploadReceipt(id, file)
     const form = new FormData()
     form.append('receipt', file)
-    return this.post(`/transactions/${id}/receipt`, form, {
+    return this.post(API_ROUTES.transactions.receipt(id), form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   }
@@ -80,26 +77,23 @@ class BalanceService extends BaseApiService {
   async getSummary(
     filter: MonthFilter & { quincena?: QuincenaFilter }
   ): Promise<BalanceSummaryDTO> {
-    if (USE_MOCK) return mockBalanceService.getSummary(filter)
-    // GET /api/v1/balance?month=&year=&quincena=
-    return this.get('/balance', { params: filter })
+    if (useMock()) return mockBalanceService.getSummary(filter)
+    return this.get(API_ROUTES.balance.summary, { params: filter })
   }
 
   async adjust(dto: AdjustBalanceDTO): Promise<BalanceSummaryDTO> {
-    if (USE_MOCK) return mockBalanceService.adjust(dto)
-    // POST /api/v1/balance/adjust
-    return this.post('/balance/adjust', dto)
+    if (useMock()) return mockBalanceService.adjust(dto)
+    return this.post(API_ROUTES.balance.adjust, dto)
   }
 
   async addIncome(dto: { description: string; amount: number }): Promise<BalanceSummaryDTO> {
-    if (USE_MOCK) return mockBalanceService.addIncome(dto)
-    // POST /api/v1/balance/income
-    return this.post('/balance/income', dto)
+    if (useMock()) return mockBalanceService.addIncome(dto)
+    return this.post(API_ROUTES.balance.income, dto)
   }
 
   async getMonthlyTrend(months = 6): Promise<MonthlyTrendDTO[]> {
-    if (USE_MOCK) return mockBalanceService.getMonthlyTrend(months)
-    return this.get('/balance/trend', { params: { months } })
+    if (useMock()) return mockBalanceService.getMonthlyTrend(months)
+    return this.get(API_ROUTES.balance.trend, { params: { months } })
   }
 }
 
