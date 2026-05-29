@@ -1,17 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
 import { EventCard } from '@/modules/events/components/EventCard'
 import type { BudgetEventDTO, TransactionResponseDTO } from '@/core/dtos'
 import '@/i18n'
 
-const navigateMock = vi.fn()
+const pushMock = vi.fn()
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
-  return { ...actual, useNavigate: () => navigateMock }
-})
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: pushMock }),
+  useParams: () => ({}),
+  usePathname: () => '/',
+}))
 
 const event: BudgetEventDTO = {
   id: 'evt-1',
@@ -46,11 +46,7 @@ const linkedTx: TransactionResponseDTO[] = []
 
 describe('Events — <EventCard /> participation flow', () => {
   it('shows title, description and confirmed participant count', () => {
-    render(
-      <MemoryRouter>
-        <EventCard event={event} linkedTransactions={linkedTx} />
-      </MemoryRouter>
-    )
+    render(<EventCard event={event} linkedTransactions={linkedTx} />)
     expect(screen.getByText('Cena de aniversario')).toBeInTheDocument()
     expect(screen.getByText(/Reservación/)).toBeInTheDocument()
     // Only 1 of 2 participants is CONFIRMED.
@@ -59,12 +55,8 @@ describe('Events — <EventCard /> participation flow', () => {
 
   it('navigates to the event detail page on click', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <EventCard event={event} linkedTransactions={linkedTx} />
-      </MemoryRouter>
-    )
+    render(<EventCard event={event} linkedTransactions={linkedTx} />)
     await user.click(screen.getByRole('button'))
-    expect(navigateMock).toHaveBeenCalledWith('/events/evt-1')
+    expect(pushMock).toHaveBeenCalledWith('/events/evt-1')
   })
 })

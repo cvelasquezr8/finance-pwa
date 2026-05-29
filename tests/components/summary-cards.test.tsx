@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { SummaryCards } from '@/modules/dashboard/components/SummaryCards'
 import type { BalanceSummaryDTO } from '@/core/dtos'
 import '@/i18n'
+
+// useCountUp uses requestAnimationFrame which doesn't run in jsdom.
+// Return target directly so rendered values are immediately testable.
+vi.mock('@/lib/hooks/useCountUp', () => ({
+  useCountUp: (target: number) => target,
+}))
 
 const summary: BalanceSummaryDTO = {
   currentBalance: 12_500,
@@ -32,8 +38,8 @@ describe('Dashboard <SummaryCards />', () => {
 
   it('renders four skeleton placeholders while loading', () => {
     const { container } = render(<SummaryCards summary={null} isLoading />)
-    const skeletons = container.querySelectorAll('.animate-pulse')
-    // Each skeleton card has 2 pulsing bars (header + value).
+    // Skeleton component uses animate-shimmer (not animate-pulse).
+    const skeletons = container.querySelectorAll('.animate-shimmer')
     expect(skeletons.length).toBeGreaterThanOrEqual(4)
   })
 
