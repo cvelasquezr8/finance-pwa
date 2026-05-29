@@ -153,12 +153,24 @@ function UserCard({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPr
   )
 }
 
-function UserRow({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionProps) {
+function UserRow({
+  user,
+  onToggleRole,
+  onBlock,
+  onDelete,
+  onRestore,
+  idx,
+}: ActionProps & { idx: number }) {
   const { t } = useTranslation()
   const isDeleted = user.status === 'deleted'
 
   return (
-    <tr className="border-b border-border transition-colors hover:bg-muted/30">
+    <tr
+      className={cn(
+        'border-b border-border transition-colors duration-150 hover:bg-accent/50',
+        idx % 2 === 1 && 'bg-muted/30'
+      )}
+    >
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary dark:bg-primary/30">
@@ -261,7 +273,7 @@ export function AdminUsersPage() {
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="border-l-2 border-primary pl-3 lg:border-0 lg:pl-0">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">{t('admin.title')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{t('admin.subtitle')}</p>
         </div>

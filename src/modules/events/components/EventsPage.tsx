@@ -24,7 +24,7 @@ export function EventsPage() {
     <div className="flex flex-col gap-6 p-4 md:p-6">
       {/* Header — wraps on very small screens */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="border-l-2 border-primary pl-3 lg:border-0 lg:pl-0">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             {t('events.title')}
           </h1>
