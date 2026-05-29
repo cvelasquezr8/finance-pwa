@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom'
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { CalendarDays, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { EventProgressBar } from './EventProgressBar'
@@ -19,7 +21,7 @@ interface Props {
 
 export function EventCard({ event, linkedTransactions }: Props) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const contributed = linkedTransactions
     .filter((tx) => tx.eventId === event.id && tx.status === 'confirmed')
@@ -29,7 +31,7 @@ export function EventCard({ event, linkedTransactions }: Props) {
 
   return (
     <button
-      onClick={() => navigate(`/events/${event.id}`)}
+      onClick={() => router.push(`/events/${event.id}`)}
       className="w-full rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-amber-500/40 hover:shadow-md active:scale-[0.99]"
     >
       <div className="mb-3 flex items-start justify-between gap-2">

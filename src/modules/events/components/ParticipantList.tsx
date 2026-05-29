@@ -1,3 +1,5 @@
+'use client'
+
 import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'

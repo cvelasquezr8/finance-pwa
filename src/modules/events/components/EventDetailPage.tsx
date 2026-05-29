@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Loader2, UserPlus, XCircle, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
@@ -28,10 +30,11 @@ import type { MonthFilter, QuincenaFilter } from '@/core/types'
 const dispatchDataChanged = () => window.dispatchEvent(new CustomEvent('financeDataChanged'))
 
 export function EventDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const params = useParams()
+  const id = params?.id as string | undefined
   const { t } = useTranslation()
   const { user } = useAuth()
-  const navigate = useNavigate()
+  const router = useRouter()
   const [inviteOpen, setInviteOpen] = useState(false)
   const [txModalOpen, setTxModalOpen] = useState(false)
 
@@ -76,7 +79,7 @@ export function EventDetailPage() {
       <div className="flex flex-col items-center gap-3 p-6">
         <XCircle className="h-10 w-10 text-destructive" />
         <p className="text-sm text-muted-foreground">{error ?? t('events.noEvents')}</p>
-        <Button variant="outline" onClick={() => navigate('/events')}>
+        <Button variant="outline" onClick={() => router.push('/events')}>
           {t('events.navLabel')}
         </Button>
       </div>
@@ -179,7 +182,7 @@ export function EventDetailPage() {
       {/* Header */}
       <div>
         <button
-          onClick={() => navigate('/events')}
+          onClick={() => router.push('/events')}
           className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />

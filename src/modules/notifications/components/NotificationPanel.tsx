@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom'
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNotifications } from '@/contexts/NotificationContext'
@@ -6,12 +8,12 @@ import { cn } from '@/lib/utils'
 
 export function NotificationPanel({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
+  const router = useRouter()
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismiss } = useNotifications()
 
   const handleItemClick = (id: string, eventId: string) => {
     markAsRead(id)
-    navigate(`/events/${eventId}`)
+    router.push(`/events/${eventId}`)
     onClose?.()
   }
 

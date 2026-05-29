@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { Trash2, Pencil, CreditCard, MoreVertical } from 'lucide-react'
 import { useTranslation } from 'react-i18next'

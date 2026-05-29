@@ -1,3 +1,5 @@
+'use client'
+
 import { Shield, MoreHorizontal, MoreVertical, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { AdminUserDTO } from '@/core/dtos'

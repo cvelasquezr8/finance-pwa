@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom'
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import type { TransactionResponseDTO } from '@/core/dtos'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
@@ -15,7 +17,7 @@ export function QuickDailyList({
   className?: string
 }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const recent = [...transactions].sort((a, b) => b.dueDay - a.dueDay).slice(0, 5)
 
@@ -59,7 +61,7 @@ export function QuickDailyList({
 
       <div className="border-t border-border px-4 py-3">
         <button
-          onClick={() => navigate('/transactions')}
+          onClick={() => router.push('/transactions')}
           className="text-xs font-medium text-primary underline-offset-2 hover:underline"
         >
           {t('dashboard.viewAll')} →
