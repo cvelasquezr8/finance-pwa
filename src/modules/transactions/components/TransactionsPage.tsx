@@ -6,9 +6,9 @@ import { useDashboard } from '@/modules/dashboard/hooks/useDashboard'
 import { useCards } from '@/modules/cards/hooks/useCards'
 import { PaginatedTransactionSection } from './PaginatedTransactionSection'
 import { MonthFilter } from '@/components/layout/MonthFilter'
-import { getQuincena, getQuincenaDateRangeLabel, formatCurrency } from '@/lib/utils'
+import { FilterBar } from '@/components/layout/FilterBar'
+import { getQuincena, getQuincenaDateRangeLabel, formatCurrency, cn } from '@/lib/utils'
 import type { MonthFilter as MonthFilterType, QuincenaFilter } from '@/core/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -52,7 +52,7 @@ export function TransactionsPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <FilterBar>
         <MonthFilter filter={filter} onChange={setFilter} />
         {cards.length > 0 && (
           <Select value={cardFilter} onValueChange={setCardFilter}>
@@ -71,57 +71,38 @@ export function TransactionsPage() {
             </SelectContent>
           </Select>
         )}
-      </div>
+      </FilterBar>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-xs uppercase text-muted-foreground">
-              {t('transactions.income')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-              +{formatCurrency(totalIncome)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-xs uppercase text-muted-foreground">
-              {t('transactions.scheduled')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-red-600 dark:text-red-400">
-              -{formatCurrency(totalScheduled)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-xs uppercase text-muted-foreground">
-              {t('transactions.confirmed')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-              -{formatCurrency(totalConfirmed)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-xs uppercase text-muted-foreground">
-              {t('transactions.dailyExpenses')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
-              -{formatCurrency(totalDaily)}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex flex-wrap divide-x divide-border rounded-xl border border-border bg-card">
+        {[
+          {
+            label: t('transactions.income'),
+            value: formatCurrency(totalIncome),
+            color: 'text-emerald-600 dark:text-emerald-400',
+          },
+          {
+            label: t('transactions.scheduled'),
+            value: `-${formatCurrency(totalScheduled)}`,
+            color: 'text-red-600 dark:text-red-400',
+          },
+          {
+            label: t('transactions.confirmed'),
+            value: `-${formatCurrency(totalConfirmed)}`,
+            color: 'text-amber-600 dark:text-amber-400',
+          },
+          {
+            label: t('transactions.dailyExpenses'),
+            value: `-${formatCurrency(totalDaily)}`,
+            color: 'text-orange-600 dark:text-orange-400',
+          },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="flex min-w-[7rem] flex-1 flex-col gap-0.5 px-4 py-3">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              {label}
+            </span>
+            <span className={cn('text-base font-bold tabular-nums', color)}>{value}</span>
+          </div>
+        ))}
       </div>
 
       <PaginatedTransactionSection
