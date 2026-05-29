@@ -24,8 +24,9 @@ Apply a premium polish layer across the entire Finance PWA without structural re
 
 ### Number Counters on SummaryCards
 - Balance figures animate from 0 to real value on mount and on every filter change
-- Uses `@property --num` CSS Houdini trick with `counter()` — no JS animation loop
-- Falls back gracefully in browsers without `@property` support (value just appears instantly)
+- Implementation: lightweight `useCountUp(target, duration)` hook using `requestAnimationFrame` — increments a local `value` state from 0 to `target` over 600ms with an ease-out curve, then formats via the existing `formatCurrency` util
+- Hook resets and replays whenever `target` changes (i.e. on filter change)
+- No external library needed; ~25 lines of hook code
 
 ### BottomBar Active Pill
 - An absolutely-positioned amber pill slides under the active icon using CSS `translate`
@@ -82,12 +83,14 @@ Apply a premium polish layer across the entire Finance PWA without structural re
 - **TransactionTable**: Shimmer rows matching column widths of the real table
 
 ### Suspense Boundaries
+- Migrate dashboard data hooks from `useQuery` to `useSuspenseQuery` (TanStack Query v5) so they participate in React Suspense
 - Wrap each major dashboard section in `<Suspense fallback={<MatchingSkeleton />}>`:
   - `<SummaryCards>` — own Suspense
   - `<BalanceTrendChart>` — own Suspense
   - `<CategorySpendingChart>` — own Suspense
   - `<QuickDailyList>` — own Suspense
 - Sections reveal independently; no all-or-nothing flash
+- Non-dashboard pages keep `useQuery` + manual `isLoading` checks (lower complexity, lower traffic)
 
 ### Optimistic Updates on Transaction Submit
 - In `AddTransactionModal` / `AddDailyExpenseModal`: use TanStack Query `onMutate` to:
@@ -141,7 +144,7 @@ Apply a premium polish layer across the entire Finance PWA without structural re
 
 ### Dashboard
 - SummaryCards re-animate (stagger) on every filter change, not just initial mount — achieved by keying the grid on `filter.month + filter.quincena`
-- MonthFilter Quincena toggle: pill-style with sliding amber indicator (replaces or wraps the current select)
+- MonthFilter Quincena toggle: replace the quincena dropdown with a 2-option pill toggle (Q1 / Q2) with a sliding amber indicator; month and year selectors remain unchanged
 - Desktop layout: sticky right column with `border-l border-border ml-6 pl-6` separator
 
 ### Transactions
@@ -182,14 +185,15 @@ Add directive to every component that uses hooks or context, making the server/c
 - All modal components
 
 ### TanStack Query Hover Prefetch
-- BottomBar and Sidebar nav links: on `onMouseEnter`, call `queryClient.prefetchQuery(routePrimaryQueryKey)`
+- BottomBar and Sidebar nav links: on `onMouseEnter`, call `queryClient.prefetchQuery(routePrimaryQueryKey)` + `router.prefetch(href)` in parallel
+- Nav components don't have filter state — prefetch uses the **current calendar period** (computed inline: `{ month: now.getMonth()+1, year: now.getFullYear(), quincena: getQuincena(now) }`)
 - Route → query key mapping:
-  - `/` → `['dashboard', filter]`
-  - `/transactions` → `['transactions', filter]`
+  - `/` → `['dashboard', currentPeriod]`
+  - `/transactions` → `['transactions', currentPeriod]`
   - `/events` → `['events']`
-  - `/history` → `['history', filter]`
+  - `/history` → `['history', currentPeriod]`
   - `/cards` → `['cards']`
-- Next.js `router.prefetch(href)` called in parallel for JS chunk prefetch
+- This primes the most common case (current period); filter changes on arrival still refetch as normal
 
 ### Avatar Image Optimization
 - `Sidebar.tsx` and `MobileHeader.tsx`: replace `<img src={user.avatarUrl}>` with `next/image`
@@ -211,6 +215,7 @@ Add directive to every component that uses hooks or context, making the server/c
 ## Files to Create
 - `src/components/ui/skeleton.tsx` — shimmer skeleton (install via Shadcn CLI if not present)
 - `src/components/layout/FilterBar.tsx` — unified filter toolbar for Transactions page
+- `src/lib/hooks/useCountUp.ts` — `requestAnimationFrame`-based count-up hook for SummaryCards
 
 ## Files to Modify
 - `src/app/globals.css` — add keyframes, `@property`, font variable updates
