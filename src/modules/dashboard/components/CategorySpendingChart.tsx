@@ -22,7 +22,7 @@ const CHART_PALETTE = [
   'hsl(var(--chart-3))',
   'hsl(var(--chart-4))',
   'hsl(var(--chart-5))',
-  '#78716c',
+  'hsl(var(--muted-foreground) / 0.4)',
 ]
 
 interface CategoryPoint {
