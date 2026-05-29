@@ -43,7 +43,11 @@ export function DashboardPage() {
       <MonthFilter filter={filter} onChange={setFilter} />
 
       <div className="mt-6">
-        <SummaryCards summary={summary} isLoading={summaryLoading} />
+        <SummaryCards
+          summary={summary}
+          isLoading={summaryLoading}
+          animationKey={`${filter.month}-${filter.quincena}`}
+        />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">

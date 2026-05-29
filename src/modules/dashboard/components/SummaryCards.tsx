@@ -3,30 +3,42 @@
 import { TrendingDown, TrendingUp, Wallet, CalendarDays } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency } from '@/lib/utils'
+import { useCountUp } from '@/lib/hooks/useCountUp'
 import type { BalanceSummaryDTO } from '@/core/dtos'
 import { cn } from '@/lib/utils'
 
-interface Props {
-  summary: BalanceSummaryDTO | null
-  isLoading: boolean
+interface StatCardProps {
+  title: string
+  rawValue: number
+  subtitle?: string
+  icon: React.ElementType
+  trend?: 'up' | 'down' | 'neutral'
+  hero?: boolean
+  staggerClass?: string
 }
 
 function StatCard({
   title,
-  value,
+  rawValue,
   subtitle,
   icon: Icon,
   trend,
-}: {
-  title: string
-  value: string
-  subtitle?: string
-  icon: React.ElementType
-  trend?: 'up' | 'down' | 'neutral'
-}) {
+  hero,
+  staggerClass,
+}: StatCardProps) {
+  const animated = useCountUp(rawValue)
+  const formatted = formatCurrency(animated)
+
   return (
-    <Card className="animate-fade-in">
+    <Card
+      className={cn(
+        'animate-fade-in-up',
+        staggerClass,
+        hero && 'from-primary/8 dark:from-primary/12 bg-gradient-to-br to-transparent'
+      )}
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <div
@@ -52,34 +64,50 @@ function StatCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold tracking-tight">{value}</div>
+        <div
+          className={cn(
+            'font-bold tabular-nums tracking-tight',
+            hero ? 'text-3xl text-primary' : 'text-2xl'
+          )}
+        >
+          {formatted}
+        </div>
         {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
       </CardContent>
     </Card>
   )
 }
 
-function SkeletonCard() {
+function SkeletonCard({ staggerClass }: { staggerClass?: string }) {
   return (
-    <Card>
+    <Card className={cn('animate-fade-in-up', staggerClass)}>
       <CardHeader className="pb-2">
-        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+        <Skeleton className="h-3 w-24" />
       </CardHeader>
-      <CardContent>
-        <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+      <CardContent className="space-y-2">
+        <Skeleton className="h-7 w-32" />
+        <Skeleton className="h-3 w-20" />
       </CardContent>
     </Card>
   )
 }
 
-export function SummaryCards({ summary, isLoading }: Props) {
+export function SummaryCards({
+  summary,
+  isLoading,
+  animationKey,
+}: {
+  summary: BalanceSummaryDTO | null
+  isLoading: boolean
+  animationKey?: string
+}) {
   const { t } = useTranslation()
 
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonCard key={i} />
+        {(['stagger-1', 'stagger-2', 'stagger-3', 'stagger-4'] as const).map((s) => (
+          <SkeletonCard key={s} staggerClass={s} />
         ))}
       </div>
     )
@@ -87,41 +115,44 @@ export function SummaryCards({ summary, isLoading }: Props) {
 
   if (!summary) return null
 
+  const staggerClasses = ['stagger-1', 'stagger-2', 'stagger-3', 'stagger-4'] as const
+
   const cards = [
     {
       title: t('summary.currentBalance'),
-      value: formatCurrency(summary.currentBalance),
+      rawValue: summary.currentBalance,
       subtitle: t('summary.initialBalance', { amount: formatCurrency(summary.initialBalance) }),
       icon: Wallet,
-      trend: summary.currentBalance >= 0 ? 'up' : 'down',
+      trend: summary.currentBalance >= 0 ? ('up' as const) : ('down' as const),
+      hero: true,
     },
     {
       title: t('summary.projectedBalance'),
-      value: formatCurrency(summary.projectedBalance),
+      rawValue: summary.projectedBalance,
       subtitle: t('summary.expectedIncome', { amount: formatCurrency(summary.expectedIncome) }),
       icon: TrendingUp,
-      trend: summary.projectedBalance >= 0 ? 'up' : 'down',
+      trend: summary.projectedBalance >= 0 ? ('up' as const) : ('down' as const),
     },
     {
       title: t('summary.totalDebt'),
-      value: formatCurrency(summary.totalDebt),
+      rawValue: summary.totalDebt,
       subtitle: t('summary.pending', { amount: formatCurrency(summary.totalPendingScheduled) }),
       icon: TrendingDown,
-      trend: 'down',
+      trend: 'down' as const,
     },
     {
       title: t('summary.dailyExpense'),
-      value: formatCurrency(summary.dailyAllowance),
+      rawValue: summary.dailyAllowance,
       subtitle: t('summary.remainingDays', { days: summary.remainingDays }),
       icon: CalendarDays,
-      trend: summary.dailyAllowance > 500 ? 'up' : 'neutral',
+      trend: summary.dailyAllowance > 500 ? ('up' as const) : ('neutral' as const),
     },
-  ] as const
+  ]
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card) => (
-        <StatCard key={card.title} {...card} trend={card.trend as 'up' | 'down' | 'neutral'} />
+    <div key={animationKey} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {cards.map((card, idx) => (
+        <StatCard key={card.title} {...card} staggerClass={staggerClasses[idx]} />
       ))}
     </div>
   )
