@@ -34,8 +34,8 @@ export function BottomBar() {
             className="pointer-events-none absolute top-1 h-10 rounded-xl bg-primary/10 transition-transform duration-300 ease-out"
             style={{
               width: `${pillWidthPct}%`,
-              transform: `translateX(${pillOffset * NAV_ITEMS.length * 4}px)`,
-              left: `${pillOffset}%`,
+              left: 0,
+              transform: `translateX(${activeIndex * 100}%)`,
             }}
             aria-hidden
           />
