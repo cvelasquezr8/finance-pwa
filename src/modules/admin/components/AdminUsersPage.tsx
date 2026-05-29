@@ -403,8 +403,8 @@ export function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
-                    <UserRow key={user.id} {...actionProps(user)} />
+                  {users.map((user, idx) => (
+                    <UserRow key={user.id} idx={idx} {...actionProps(user)} />
                   ))}
                 </tbody>
               </table>
