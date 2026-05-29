@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { ArrowLeftRight } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { TransactionResponseDTO } from '@/core/dtos'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import { formatCurrency, cn } from '@/lib/utils'
@@ -37,15 +39,18 @@ export function QuickDailyList({
         <div className="space-y-3 p-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between">
-              <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-              <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-4 w-16" />
             </div>
           ))}
         </div>
       ) : recent.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-          {t('dashboard.noExpenses')}
-        </p>
+        <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+          <div className="rounded-full bg-primary/10 p-3">
+            <ArrowLeftRight className="h-5 w-5 text-primary" />
+          </div>
+          <p className="text-sm font-medium">{t('dashboard.noExpenses')}</p>
+        </div>
       ) : (
         <ul className="divide-y divide-border px-4">
           {recent.map((tx) => (
