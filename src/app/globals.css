@@ -251,3 +251,10 @@
 .stagger-5 {
   animation-delay: 240ms;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-shimmer {
+    animation: none;
+  }
+}
