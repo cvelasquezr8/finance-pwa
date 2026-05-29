@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, ArrowLeftRight, History, TrendingUp, PartyPopper } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
+import { cn, getQuincena } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
@@ -17,6 +18,33 @@ const NAV_ITEMS = [
 export function BottomBar() {
   const { t } = useTranslation()
   const pathname = usePathname()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
+  const handleMouseEnter = (to: string) => {
+    router.prefetch(to)
+    const now = new Date()
+    const currentPeriod = {
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      quincena: getQuincena(now),
+    }
+    const prefetchMap: Record<string, unknown[]> = {
+      '/': ['dashboard', currentPeriod.month, currentPeriod.year, currentPeriod.quincena],
+      '/transactions': ['transactions', 'list', currentPeriod],
+      '/events': ['events'],
+      '/history': ['history', currentPeriod],
+      '/cards': ['cards'],
+    }
+    const key = prefetchMap[to]
+    if (key) {
+      queryClient.prefetchQuery({
+        queryKey: key,
+        queryFn: () => Promise.resolve(null),
+        staleTime: 30_000,
+      })
+    }
+  }
 
   const activeIndex = NAV_ITEMS.findIndex(({ to }) =>
     to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(to + '/')
@@ -47,6 +75,7 @@ export function BottomBar() {
             <Link
               key={to}
               href={to}
+              onMouseEnter={() => handleMouseEnter(to)}
               className={cn(
                 'relative z-10 flex min-w-[4rem] flex-col items-center gap-0.5 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors duration-200',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'

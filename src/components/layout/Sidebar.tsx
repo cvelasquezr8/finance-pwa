@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -18,8 +18,9 @@ import {
   PartyPopper,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
+import { cn, getQuincena } from '@/lib/utils'
 import { UserProfileModal } from '@/modules/dashboard/components/UserProfileModal'
 import { NotificationBell } from '@/modules/notifications/components/NotificationBell'
 
@@ -27,6 +28,33 @@ export function Sidebar() {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
+  const handleMouseEnter = (to: string) => {
+    router.prefetch(to)
+    const now = new Date()
+    const currentPeriod = {
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      quincena: getQuincena(now),
+    }
+    const prefetchMap: Record<string, unknown[]> = {
+      '/': ['dashboard', currentPeriod.month, currentPeriod.year, currentPeriod.quincena],
+      '/transactions': ['transactions', 'list', currentPeriod],
+      '/events': ['events'],
+      '/history': ['history', currentPeriod],
+      '/cards': ['cards'],
+    }
+    const key = prefetchMap[to]
+    if (key) {
+      queryClient.prefetchQuery({
+        queryKey: key,
+        queryFn: () => Promise.resolve(null),
+        staleTime: 30_000,
+      })
+    }
+  }
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -75,6 +103,7 @@ export function Sidebar() {
           <Link
             key={to}
             href={to}
+            onMouseEnter={() => handleMouseEnter(to)}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
               isActive(to)
