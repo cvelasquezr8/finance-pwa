@@ -3,12 +3,13 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -31,7 +32,11 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   return (
     <NotificationProvider>
-      <AppLayout>{children}</AppLayout>
+      <AppLayout>
+        <div key={pathname} className="animate-fade-in-up" style={{ animationDuration: '150ms' }}>
+          {children}
+        </div>
+      </AppLayout>
     </NotificationProvider>
   )
 }
