@@ -7,7 +7,7 @@
  * is configured — useful for local UI work against an unstable backend.
  */
 
-const rawHost = ((process.env.NEXT_PUBLIC_API_HOST ?? '') || '').trim()
+const rawHost = (process.env.NEXT_PUBLIC_API_HOST ?? '').trim()
 const forceMock = String(process.env.NEXT_PUBLIC_FORCE_MOCK ?? '').toLowerCase() === 'true'
 
 export const API_HOST: string = rawHost

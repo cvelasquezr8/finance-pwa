@@ -1,7 +1,7 @@
 /**
  * Centralized API endpoint registry.
  * All services consume routes from here so the contract with the backend
- * lives in one place. When VITE_API_HOST is set the hybrid client targets
+ * lives in one place. When NEXT_PUBLIC_API_HOST is set the hybrid client targets
  * these paths against the real host; otherwise the in-memory mocks resolve
  * the same operations.
  */
