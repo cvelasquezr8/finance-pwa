@@ -1,6 +1,3 @@
-/* install before running: npm install @fontsource/geist-mono */
-@import '@fontsource/geist-mono';
-@import '@fontsource-variable/inter';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @tailwind base;

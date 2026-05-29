@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from 'next'
-import '@fontsource-variable/inter'
-import '@fontsource/geist-mono'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/Providers'
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Finance Manager',
@@ -23,7 +28,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={inter.variable}>
       <head>
         {/*
           dangerouslySetInnerHTML is safe here: __html is a hardcoded
