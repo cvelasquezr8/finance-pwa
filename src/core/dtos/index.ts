@@ -156,6 +156,8 @@ export interface CardDTO {
   name: string
   lastFour: string
   type: CardType
+  /** Expiry date as entered by the user (e.g. "12/25"). Slash must be preserved as-is. */
+  expiryDate?: string
   createdAt: string
 }
 

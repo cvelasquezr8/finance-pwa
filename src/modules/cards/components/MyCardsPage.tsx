@@ -28,11 +28,6 @@ import {
 import { cn } from '@/lib/utils'
 import type { CardDTO } from '@/core/dtos'
 
-const TYPE_STYLES: Record<CardDTO['type'], string> = {
-  CREDIT: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  DEBIT: 'bg-primary/15 text-primary',
-}
-
 // ─── Edit Card Modal ──────────────────────────────────────────────────────────
 
 function EditCardModal({
@@ -147,43 +142,62 @@ function EditCardModal({
   )
 }
 
-// ─── Card Item ────────────────────────────────────────────────────────────────
+// ─── Card Tile ────────────────────────────────────────────────────────────────
 
-function CardItem({
+function CardTile({
   card,
-  onDelete,
   onEdit,
+  onDelete,
 }: {
   card: CardDTO
-  onDelete: () => void
   onEdit: (id: string, values: Partial<CardFormValues>) => Promise<void>
+  onDelete: () => void
 }) {
   const { t } = useTranslation()
+  const isCredit = card.type === 'CREDIT'
+
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/30">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <CreditCard className="h-5 w-5 text-primary" />
+    <div className="group relative w-full" style={{ aspectRatio: '85.6/54' }}>
+      <div
+        className={cn(
+          'absolute inset-0 flex flex-col justify-between rounded-2xl p-5 text-white shadow-lg',
+          isCredit
+            ? 'bg-gradient-to-br from-amber-500 to-amber-800 dark:from-amber-600 dark:to-amber-900'
+            : 'bg-gradient-to-br from-stone-500 to-stone-800 dark:from-stone-700 dark:to-stone-900'
+        )}
+      >
+        <div className="flex items-start justify-between">
+          <CreditCard className="h-6 w-6 opacity-80" />
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+            {isCredit ? t('cards.credit') : t('cards.debit')}
+          </span>
         </div>
-        <div>
-          <p className="text-sm font-medium">{card.name}</p>
-          <p className="text-xs text-muted-foreground">···· ···· ···· {card.lastFour}</p>
+
+        <div className="font-mono text-sm tracking-widest opacity-90">
+          •••• •••• •••• {card.lastFour}
+        </div>
+
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide opacity-60">{t('cards.cardName')}</p>
+            <p className="text-sm font-semibold">{card.name}</p>
+          </div>
+          {card.expiryDate && (
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide opacity-60">{t('cards.expires')}</p>
+              {/* Slash preserved as-is — do not sanitize */}
+              <p className="font-mono text-sm">{card.expiryDate}</p>
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-            TYPE_STYLES[card.type]
-          )}
-        >
-          {card.type === 'CREDIT' ? t('cards.creditBadge') : t('cards.debitBadge')}
-        </span>
+
+      <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <EditCardModal card={card} onSave={onEdit} />
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          className="h-7 w-7 bg-black/20 text-white hover:bg-black/40 hover:text-white"
           onClick={onDelete}
           aria-label={t('cards.delete')}
         >
@@ -311,30 +325,42 @@ export function MyCardsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg border border-border bg-muted" />
-          ))}
-        </div>
-      ) : cards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
-          <CreditCard className="mb-3 h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">{t('cards.noCards')}</p>
-          <p className="mt-1 text-xs text-muted-foreground/60">{t('cards.addCard')}</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {cards.map((card) => (
-            <CardItem
-              key={card.id}
-              card={card}
-              onDelete={() => removeCard(card.id)}
-              onEdit={async (id, values) => {
-                await updateCard(id, values)
-              }}
+            <div
+              key={i}
+              className="w-full animate-pulse rounded-2xl bg-muted"
+              style={{ aspectRatio: '85.6/54' }}
             />
           ))}
         </div>
+      ) : (
+        <>
+          {cards.length === 0 && (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <div className="rounded-full bg-primary/10 p-4">
+                <CreditCard className="h-8 w-8 text-primary" />
+              </div>
+              <p className="font-medium">{t('cards.noCards')}</p>
+              <p className="text-sm text-muted-foreground">{t('cards.addFirstCard')}</p>
+            </div>
+          )}
+
+          {cards.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {cards.map((card) => (
+                <CardTile
+                  key={card.id}
+                  card={card}
+                  onEdit={async (id, values) => {
+                    await updateCard(id, values)
+                  }}
+                  onDelete={() => removeCard(card.id)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
