@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SortableHeader } from '@/components/ui/data-table'
 import { ReceiptCell } from './ReceiptCell'
 import { EditTransactionModal } from './EditTransactionModal'
@@ -49,7 +50,7 @@ function SkeletonRow({ cols }: { cols: number }) {
     <tr>
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 w-full animate-pulse rounded bg-muted" />
+          <Skeleton className="h-4 w-full" />
         </td>
       ))}
     </tr>
@@ -60,13 +61,10 @@ function MobileSkeletonRow() {
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <div className="flex-1 space-y-2">
-        <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="h-3 w-24" />
       </div>
-      <div className="flex flex-col items-end gap-2">
-        <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-14 animate-pulse rounded bg-muted" />
-      </div>
+      <Skeleton className="h-5 w-16" />
     </div>
   )
 }
@@ -328,11 +326,13 @@ export function TransactionTable({
                   </td>
                 </tr>
               ) : (
-                transactions.map((tx) => (
+                transactions.map((tx, idx) => (
                   <tr
                     key={tx.id}
                     className={cn(
-                      'transition-colors hover:bg-muted/30',
+                      'border-b border-border transition-colors duration-150',
+                      'hover:bg-accent/50',
+                      idx % 2 === 1 && 'bg-muted/30',
                       tx.status === 'confirmed' && 'bg-emerald-500/5 dark:bg-emerald-500/10'
                     )}
                   >
