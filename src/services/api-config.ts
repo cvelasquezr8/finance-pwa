@@ -1,16 +1,14 @@
 /**
  * Hybrid API mode resolver.
  *
- * When VITE_API_HOST is defined at build/runtime the app targets the real
+ * When NEXT_PUBLIC_API_HOST is defined at build/runtime the app targets the real
  * backend; otherwise services fall back to in-memory mocks. A force flag
- * (VITE_FORCE_MOCK=true) lets developers stay on mocks even when a host
+ * (NEXT_PUBLIC_FORCE_MOCK=true) lets developers stay on mocks even when a host
  * is configured — useful for local UI work against an unstable backend.
  */
 
-const env = import.meta.env
-
-const rawHost = (env.VITE_API_HOST ?? env.VITE_API_URL ?? '').trim()
-const forceMock = String(env.VITE_FORCE_MOCK ?? '').toLowerCase() === 'true'
+const rawHost = ((process.env.NEXT_PUBLIC_API_HOST ?? '') || '').trim()
+const forceMock = String(process.env.NEXT_PUBLIC_FORCE_MOCK ?? '').toLowerCase() === 'true'
 
 export const API_HOST: string = rawHost
 export const USE_MOCK: boolean = forceMock || rawHost.length === 0

@@ -1,7 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: [
+    './src/app/**/*.{ts,tsx}',
+    './src/components/**/*.{ts,tsx}',
+    './src/modules/**/*.{ts,tsx}',
+    './src/contexts/**/*.{ts,tsx}',
+  ],
   theme: {
     container: {
       center: true,
