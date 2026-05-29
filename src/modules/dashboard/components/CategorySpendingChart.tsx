@@ -14,6 +14,7 @@ import {
 } from 'recharts'
 import type { TransactionResponseDTO } from '@/core/dtos'
 import { CATEGORY_LABELS, formatCurrency, cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const CHART_PALETTE = [
   'hsl(var(--chart-1))',
@@ -61,8 +62,13 @@ export function CategorySpendingChart({
   if (isLoading) {
     return (
       <div className={cn('rounded-xl border border-border bg-card p-5', className)}>
-        <div className="mb-4 h-5 w-48 animate-pulse rounded bg-muted" />
-        <div className="h-[200px] animate-pulse rounded bg-muted" />
+        <Skeleton className="mb-4 h-4 w-44" />
+        <Skeleton className="h-[200px] w-full rounded-lg" />
+        <div className="mt-3 flex gap-3">
+          <Skeleton className="h-3 w-16 rounded-full" />
+          <Skeleton className="h-3 w-20 rounded-full" />
+          <Skeleton className="h-3 w-14 rounded-full" />
+        </div>
       </div>
     )
   }

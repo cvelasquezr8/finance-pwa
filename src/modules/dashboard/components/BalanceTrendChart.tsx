@@ -14,9 +14,10 @@ import {
 import { useBalanceTrend } from '../hooks/useBalanceTrend'
 import { formatCurrency } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
-const INCOME_COLOR = '#f59e0b'
-const EXPENSE_COLOR = '#78716c'
+const INCOME_COLOR = 'hsl(var(--primary))'
+const EXPENSE_COLOR = 'hsl(var(--muted-foreground) / 0.4)'
 
 export function BalanceTrendChart({ className }: { className?: string }) {
   const { t } = useTranslation()
@@ -25,8 +26,20 @@ export function BalanceTrendChart({ className }: { className?: string }) {
   if (isLoading) {
     return (
       <div className={cn('rounded-xl border border-border bg-card p-5', className)}>
-        <div className="mb-4 h-5 w-40 animate-pulse rounded bg-muted" />
-        <div className="h-[220px] animate-pulse rounded bg-muted" />
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-3 w-20" />
+        </div>
+        <div className="relative h-[220px] overflow-hidden rounded-lg">
+          <Skeleton className="h-full w-full" />
+          {[25, 50, 75].map((pct) => (
+            <div
+              key={pct}
+              className="absolute left-0 right-0 border-b border-muted-foreground/10"
+              style={{ top: `${pct}%` }}
+            />
+          ))}
+        </div>
       </div>
     )
   }
