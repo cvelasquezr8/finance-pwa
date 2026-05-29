@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/data-table'
 import { useDataTableState } from '@/lib/hooks/useDataTableState'
 import { formatCurrency, CATEGORY_LABELS } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { UpdateTransactionDTO } from '@/core/dtos'
 
 const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)
@@ -326,7 +327,7 @@ export function HistoryPage() {
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
-      <div>
+      <div className="border-l-2 border-primary pl-3 lg:border-0 lg:pl-0">
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           <History className="h-6 w-6" /> {t('history.title')}
         </h1>
@@ -400,9 +401,7 @@ export function HistoryPage() {
       )}
 
       {isLoading ? (
-        Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-16 animate-pulse rounded-xl border border-border bg-muted/20" />
-        ))
+        Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)
       ) : total === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
           <History className="h-10 w-10 opacity-30" />

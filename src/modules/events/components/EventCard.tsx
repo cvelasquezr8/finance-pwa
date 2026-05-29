@@ -9,17 +9,18 @@ import type { BudgetEventDTO } from '@/core/dtos'
 import type { TransactionResponseDTO } from '@/core/dtos'
 
 const STATUS_STYLES = {
-  ACTIVE: 'bg-success/15 text-success',
-  COMPLETED: 'bg-primary/15 text-primary',
-  CANCELLED: 'bg-destructive/15 text-destructive',
+  ACTIVE: 'bg-success/15 text-success border-l-success',
+  COMPLETED: 'bg-primary/15 text-primary border-l-primary',
+  CANCELLED: 'bg-destructive/15 text-destructive border-l-destructive',
 } as const
 
 interface Props {
   event: BudgetEventDTO
   linkedTransactions: TransactionResponseDTO[]
+  staggerIndex?: number
 }
 
-export function EventCard({ event, linkedTransactions }: Props) {
+export function EventCard({ event, linkedTransactions, staggerIndex = 0 }: Props) {
   const { t } = useTranslation()
   const router = useRouter()
 
@@ -29,10 +30,24 @@ export function EventCard({ event, linkedTransactions }: Props) {
 
   const confirmedCount = event.participants.filter((p) => p.status === 'CONFIRMED').length
 
+  const deadlineDate = event.deadline ? new Date(event.deadline) : null
+  const isNearDeadline =
+    deadlineDate !== null &&
+    deadlineDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 &&
+    event.status === 'ACTIVE'
+
+  const staggerClasses = ['stagger-1', 'stagger-2', 'stagger-3', 'stagger-4', 'stagger-5']
+  const staggerClass = staggerClasses[staggerIndex % staggerClasses.length]
+
   return (
     <button
       onClick={() => router.push(`/events/${event.id}`)}
-      className="w-full rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-amber-500/40 hover:shadow-md active:scale-[0.99]"
+      className={cn(
+        'w-full rounded-xl border border-border bg-card p-4 text-left shadow-sm',
+        'transition-all duration-200 hover:border-primary/30 hover:shadow-md active:scale-[0.99]',
+        'animate-fade-in-up',
+        staggerClass
+      )}
     >
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -43,7 +58,7 @@ export function EventCard({ event, linkedTransactions }: Props) {
         </div>
         <span
           className={cn(
-            'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+            'shrink-0 rounded-full border-l-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
             STATUS_STYLES[event.status]
           )}
         >
@@ -58,10 +73,15 @@ export function EventCard({ event, linkedTransactions }: Props) {
           <Users className="h-3.5 w-3.5" />
           {confirmedCount} {t('events.participants')}
         </span>
-        {event.deadline && (
-          <span className="flex items-center gap-1">
+        {deadlineDate && (
+          <span
+            className={cn(
+              'flex items-center gap-1',
+              isNearDeadline && 'animate-pulse font-medium text-amber-500 dark:text-amber-400'
+            )}
+          >
             <CalendarDays className="h-3.5 w-3.5" />
-            {new Date(event.deadline).toLocaleDateString(undefined, {
+            {deadlineDate.toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
               year: 'numeric',

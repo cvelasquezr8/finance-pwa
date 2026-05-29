@@ -47,20 +47,29 @@ export function EventsPage() {
         </div>
       ) : events.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <PartyPopper className="h-12 w-12 text-muted-foreground/40" />
+          <div className="rounded-full bg-primary/10 p-4">
+            <PartyPopper className="h-8 w-8 text-primary" />
+          </div>
+          <p className="font-medium">{t('events.noEvents')}</p>
           <p className="text-sm text-muted-foreground">{t('events.noEvents')}</p>
-          <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)} className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreateOpen(true)}
+            className="mt-1 gap-2"
+          >
             <Plus className="h-4 w-4" />
             {t('events.createEvent')}
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
+          {events.map((event, idx) => (
             <EventCard
               key={event.id}
               event={event}
-              linkedTransactions={allLinkedTransactions.filter((tx) => tx.eventId === event.id)}
+              linkedTransactions={allLinkedTransactions}
+              staggerIndex={idx}
             />
           ))}
         </div>

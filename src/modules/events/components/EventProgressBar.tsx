@@ -27,7 +27,7 @@ export function EventProgressBar({ contributed, goal, currency = 'MXN' }: Props)
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-amber-500 transition-all duration-500"
+          className="h-full rounded-full bg-amber-500 transition-[width] duration-700 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>

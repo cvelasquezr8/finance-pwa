@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CreditCard } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function AnalyticsPage() {
   const { t } = useTranslation()
@@ -64,7 +65,7 @@ export function AnalyticsPage() {
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
-      <div>
+      <div className="border-l-2 border-primary pl-3 lg:border-0 lg:pl-0">
         <h1 className="text-2xl font-bold">{t('analytics.title')}</h1>
         <p className="text-sm text-muted-foreground">
           {months[filter.month - 1]} {filter.year}
@@ -101,8 +102,8 @@ export function AnalyticsPage() {
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="space-y-1">
-                <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-                <div className="h-2.5 w-full animate-pulse rounded-full bg-muted" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-2.5 w-full rounded-full" />
               </div>
             ))
           ) : byCategory.length === 0 ? (
