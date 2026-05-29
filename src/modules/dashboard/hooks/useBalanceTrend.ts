@@ -1,29 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { balanceService } from '@/services/TransactionService'
 import type { MonthlyTrendDTO } from '@/core/dtos'
 
-export function useBalanceTrend(months = 6): { data: MonthlyTrendDTO[]; isLoading: boolean } {
-  const [data, setData] = useState<MonthlyTrendDTO[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    setIsLoading(true)
-    balanceService
-      .getMonthlyTrend(months)
-      .then((result) => {
-        if (!cancelled) {
-          setData(result)
-          setIsLoading(false)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setIsLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [months])
-
-  return { data, isLoading }
+export function useBalanceTrend(months = 6): { data: MonthlyTrendDTO[]; isLoading: false } {
+  const { data } = useSuspenseQuery<MonthlyTrendDTO[]>({
+    queryKey: ['balance-trend', months],
+    queryFn: () => balanceService.getMonthlyTrend(months),
+    staleTime: 5 * 60_000,
+  })
+  return { data, isLoading: false }
 }

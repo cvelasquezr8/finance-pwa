@@ -1,54 +1,50 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import type { BalanceSummaryDTO, AdjustBalanceDTO } from '@/core/dtos'
 import { balanceService } from '@/services/TransactionService'
 import { toast } from '@/lib/toast'
 
+export function dashboardQueryKey(filter: MonthFilter & { quincena?: QuincenaFilter }) {
+  return ['dashboard', filter.month, filter.year, filter.quincena ?? 'mensual'] as const
+}
+
 export function useDashboard(filter: MonthFilter & { quincena?: QuincenaFilter }) {
-  const [summary, setSummary] = useState<BalanceSummaryDTO | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchSummary = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await balanceService.getSummary(filter)
-      setSummary(data)
-    } catch {
-      toast({ title: 'Error al cargar el resumen', variant: 'destructive' })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [filter.month, filter.year, filter.quincena])
+  const { data: summary, refetch } = useSuspenseQuery<BalanceSummaryDTO>({
+    queryKey: dashboardQueryKey(filter),
+    queryFn: () => balanceService.getSummary(filter),
+    staleTime: 30_000,
+  })
 
-  useEffect(() => {
-    fetchSummary()
-  }, [fetchSummary])
-
-  const adjustBalance = async (dto: AdjustBalanceDTO) => {
-    try {
-      const data = await balanceService.adjust(dto)
-      setSummary(data)
+  const adjustMutation = useMutation({
+    mutationFn: (dto: AdjustBalanceDTO) => balanceService.adjust(dto),
+    onSuccess: (data) => {
+      queryClient.setQueryData(dashboardQueryKey(filter), data)
       toast({
         title: 'Balance ajustado',
-        description: `Nuevo saldo: $${dto.newBalance.toLocaleString('es-MX')}`,
+        description: `Nuevo saldo: $${data.currentBalance.toLocaleString('es-MX')}`,
       })
-    } catch {
-      toast({ title: 'Error al ajustar balance', variant: 'destructive' })
-    }
-  }
+    },
+    onError: () => toast({ title: 'Error al ajustar balance', variant: 'destructive' }),
+  })
 
-  const addIncome = async (description: string, amount: number) => {
-    try {
-      const data = await balanceService.addIncome({ description, amount })
-      setSummary(data)
-      toast({
-        title: 'Saldo agregado',
-        description: `+${amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`,
-      })
-    } catch {
-      toast({ title: 'Error al agregar saldo', variant: 'destructive' })
-    }
-  }
+  const incomeMutation = useMutation({
+    mutationFn: ({ description, amount }: { description: string; amount: number }) =>
+      balanceService.addIncome({ description, amount }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(dashboardQueryKey(filter), data)
+      toast({ title: 'Saldo agregado' })
+    },
+    onError: () => toast({ title: 'Error al agregar saldo', variant: 'destructive' }),
+  })
 
-  return { summary, isLoading, adjustBalance, addIncome, refetch: fetchSummary }
+  return {
+    summary,
+    isLoading: false,
+    adjustBalance: (dto: AdjustBalanceDTO) => adjustMutation.mutateAsync(dto),
+    addIncome: (description: string, amount: number) =>
+      incomeMutation.mutateAsync({ description, amount }),
+    refetch,
+  }
 }
