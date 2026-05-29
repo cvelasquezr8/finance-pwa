@@ -1,5 +1,9 @@
+'use client'
+
 import { useState, useRef, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -22,6 +26,7 @@ import { NotificationBell } from '@/modules/notifications/components/Notificatio
 export function Sidebar() {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
+  const pathname = usePathname()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -52,6 +57,9 @@ export function Sidebar() {
     ? `${(user.firstName ?? user.name)[0]}${user.lastName?.[0] ?? ''}`.toUpperCase()
     : '?'
 
+  const isActive = (to: string) =>
+    to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(to + '/')
+
   return (
     <aside className="hidden h-screen w-60 flex-col border-r border-border bg-card lg:flex">
       <div className="flex items-center gap-2.5 border-b border-border px-5 py-5">
@@ -64,22 +72,19 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
+          <Link
             key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-              )
-            }
+            href={to}
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
+              isActive(to)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:translate-x-0.5 hover:bg-accent hover:text-accent-foreground'
+            )}
           >
             <Icon className="h-4 w-4" />
             {label}
-          </NavLink>
+          </Link>
         ))}
       </nav>
 
@@ -121,7 +126,14 @@ export function Sidebar() {
         >
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-sm font-semibold text-primary dark:bg-primary/30">
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+              <Image
+                src={user.avatarUrl}
+                alt="avatar"
+                width={36}
+                height={36}
+                unoptimized
+                className="h-full w-full object-cover"
+              />
             ) : (
               initials
             )}

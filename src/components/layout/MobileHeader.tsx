@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Wallet, Settings, LogOut, ShieldCheck, CreditCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
@@ -18,7 +19,7 @@ import { NotificationBell } from '@/modules/notifications/components/Notificatio
 export function MobileHeader() {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const router = useRouter()
   const [profileOpen, setProfileOpen] = useState(false)
 
   const initials = user
@@ -53,7 +54,14 @@ export function MobileHeader() {
               )}
             >
               {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                <Image
+                  src={user.avatarUrl}
+                  alt="avatar"
+                  width={36}
+                  height={36}
+                  unoptimized
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 initials
               )}
@@ -73,13 +81,13 @@ export function MobileHeader() {
               {t('sidebar.accountSettings')}
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => navigate('/cards')}>
+            <DropdownMenuItem onClick={() => router.push('/cards')}>
               <CreditCard className="mr-2 h-4 w-4" />
               {t('cards.navLabel')}
             </DropdownMenuItem>
 
             {user?.role === 'ADMIN' && (
-              <DropdownMenuItem onClick={() => navigate('/admin/users')}>
+              <DropdownMenuItem onClick={() => router.push('/admin/users')}>
                 <ShieldCheck className="mr-2 h-4 w-4" />
                 {t('admin.navLabel')}
               </DropdownMenuItem>
