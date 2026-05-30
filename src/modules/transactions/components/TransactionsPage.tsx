@@ -73,36 +73,48 @@ export function TransactionsPage() {
         )}
       </FilterBar>
 
-      <div className="flex flex-wrap divide-x divide-border rounded-xl border border-border bg-card">
-        {[
-          {
-            label: t('transactions.income'),
-            value: formatCurrency(totalIncome),
-            color: 'text-emerald-600 dark:text-emerald-400',
-          },
-          {
-            label: t('transactions.scheduled'),
-            value: `-${formatCurrency(totalScheduled)}`,
-            color: 'text-red-600 dark:text-red-400',
-          },
-          {
-            label: t('transactions.confirmed'),
-            value: `-${formatCurrency(totalConfirmed)}`,
-            color: 'text-amber-600 dark:text-amber-400',
-          },
-          {
-            label: t('transactions.dailyExpenses'),
-            value: `-${formatCurrency(totalDaily)}`,
-            color: 'text-orange-600 dark:text-orange-400',
-          },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="flex min-w-[7rem] flex-1 flex-col gap-0.5 px-4 py-3">
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              {label}
-            </span>
-            <span className={cn('text-base font-bold tabular-nums', color)}>{value}</span>
-          </div>
-        ))}
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="grid grid-cols-2 sm:grid-cols-4">
+          {[
+            {
+              label: t('transactions.income'),
+              value: formatCurrency(totalIncome),
+              color: 'text-emerald-600 dark:text-emerald-400',
+            },
+            {
+              label: t('transactions.scheduled'),
+              value: `-${formatCurrency(totalScheduled)}`,
+              color: 'text-red-600 dark:text-red-400',
+            },
+            {
+              label: t('transactions.confirmed'),
+              value: `-${formatCurrency(totalConfirmed)}`,
+              color: 'text-amber-600 dark:text-amber-400',
+            },
+            {
+              label: t('transactions.dailyExpenses'),
+              value: `-${formatCurrency(totalDaily)}`,
+              color: 'text-orange-600 dark:text-orange-400',
+            },
+          ].map(({ label, value, color }, i) => (
+            <div
+              key={label}
+              className={cn(
+                'flex flex-col gap-0.5 border-border px-4 py-3',
+                i % 2 === 0 && 'border-r',
+                i < 2 && 'border-b sm:border-b-0',
+                i === 1 && 'sm:border-r'
+              )}
+            >
+              <span className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+                {label}
+              </span>
+              <span className={cn('text-sm font-bold tabular-nums sm:text-base', color)}>
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <PaginatedTransactionSection

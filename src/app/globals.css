@@ -155,6 +155,13 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Balanced text for headings — prevents awkward single-word orphan lines */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 /* ── Scrollbar — dark ──────────────────────────────────────────────────── */
 .dark ::-webkit-scrollbar {
   width: 6px;

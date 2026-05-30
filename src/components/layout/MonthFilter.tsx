@@ -24,10 +24,10 @@ export function MonthFilter({ filter, onChange }: Props) {
 
   const months = t('months', { returnObjects: true }) as string[]
 
-  const quincenaOptions: { value: QuincenaFilter; label: string }[] = [
-    { value: 'primera', label: t('quincena.primera') },
-    { value: 'segunda', label: t('quincena.segunda') },
-    { value: 'mensual', label: t('quincena.mensual') },
+  const quincenaOptions: { value: QuincenaFilter; label: string; short: string }[] = [
+    { value: 'primera', label: t('quincena.primera'), short: 'Q1' },
+    { value: 'segunda', label: t('quincena.segunda'), short: 'Q2' },
+    { value: 'mensual', label: t('quincena.mensual'), short: t('quincena.mensual') },
   ]
 
   const prev = () => {
@@ -49,7 +49,7 @@ export function MonthFilter({ filter, onChange }: Props) {
           value={filter.month.toString()}
           onValueChange={(v) => onChange({ ...filter, month: Number(v) })}
         >
-          <SelectTrigger className="h-8 w-32">
+          <SelectTrigger className="h-8 w-28 sm:w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -81,17 +81,18 @@ export function MonthFilter({ filter, onChange }: Props) {
       </div>
 
       <div className="flex rounded-lg border border-border p-0.5">
-        {quincenaOptions.map(({ value, label }) => (
+        {quincenaOptions.map(({ value, label, short }) => (
           <button
             key={value}
             onClick={() => onChange({ ...filter, quincena: value })}
-            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors sm:px-3 ${
               filter.quincena === value
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {label}
+            <span className="sm:hidden">{short}</span>
+            <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </div>

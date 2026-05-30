@@ -5,6 +5,7 @@ type AppRoutes =
   | '/'
   | '/admin/users'
   | '/analytics'
+  | '/auth'
   | '/cards'
   | '/events'
   | '/events/[id]'
@@ -20,6 +21,7 @@ interface ParamMap {
   '/': {}
   '/admin/users': {}
   '/analytics': {}
+  '/auth': {}
   '/cards': {}
   '/events': {}
   '/events/[id]': { id: string }

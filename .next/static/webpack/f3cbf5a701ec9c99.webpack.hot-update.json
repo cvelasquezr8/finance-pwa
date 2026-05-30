@@ -1,0 +1,11 @@
+{
+  "c": [
+    "app/layout",
+    "app/(protected)/page",
+    "app/(protected)/transactions/page",
+    "app/(protected)/analytics/page",
+    "webpack"
+  ],
+  "r": [],
+  "m": []
+}

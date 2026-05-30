@@ -1601,6 +1601,9 @@ h6 {
 .w-24 {
   width: 6rem;
 }
+.w-28 {
+  width: 7rem;
+}
 .w-3 {
   width: 0.75rem;
 }
@@ -1673,9 +1676,6 @@ h6 {
 }
 .min-w-\[4rem\] {
   min-width: 4rem;
-}
-.min-w-\[7rem\] {
-  min-width: 7rem;
 }
 .min-w-\[8rem\] {
   min-width: 8rem;
@@ -1907,11 +1907,6 @@ h6 {
   --tw-space-y-reverse: 0;
   margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
-}
-.divide-x > :not([hidden]) ~ :not([hidden]) {
-  --tw-divide-x-reverse: 0;
-  border-right-width: calc(1px * var(--tw-divide-x-reverse));
-  border-left-width: calc(1px * calc(1 - var(--tw-divide-x-reverse)));
 }
 .divide-y > :not([hidden]) ~ :not([hidden]) {
   --tw-divide-y-reverse: 0;
@@ -2691,6 +2686,13 @@ h6 {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Balanced text for headings — prevents awkward single-word orphan lines */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 /* ── Scrollbar — dark ──────────────────────────────────────────────────── */
 .dark ::-webkit-scrollbar {
   width: 6px;
@@ -3401,6 +3403,9 @@ h6 {
   .sm\:hidden {
     display: none;
   }
+  .sm\:w-32 {
+    width: 8rem;
+  }
   .sm\:w-64 {
     width: 16rem;
   }
@@ -3445,8 +3450,22 @@ h6 {
   .sm\:rounded-lg {
     border-radius: var(--radius);
   }
+  .sm\:border-b-0 {
+    border-bottom-width: 0px;
+  }
+  .sm\:border-r {
+    border-right-width: 1px;
+  }
+  .sm\:px-3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
   .sm\:text-left {
     text-align: left;
+  }
+  .sm\:text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
   }
 }
 
