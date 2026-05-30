@@ -40,6 +40,10 @@ desktop.ini
 # Vite
 .vite/
 
+# Next.js
+.next/
+out/
+
 # PWA generated assets
 public/sw.js
 public/workbox-*.js
