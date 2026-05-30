@@ -15,7 +15,9 @@ import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -28,7 +30,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { CATEGORY_LABELS } from '@/lib/utils'
+import { CATEGORY_LABELS, cn } from '@/lib/utils'
 import type { MonthFilter, QuincenaFilter, QuincenaType } from '@/core/types'
 import type { CardDTO } from '@/core/dtos'
 
@@ -68,19 +70,25 @@ export function AddScheduledExpenseModal({
       quincena: effectiveQuincena,
       dueDay: 1,
       isRecurring: false,
-      isCC: false,
       cardId: null,
     },
   })
 
   const isRecurring = watch('isRecurring')
   const quincena = watch('quincena')
-  const isCC = watch('isCC')
   const cardId = watch('cardId')
-  const creditCards = cards?.filter((c) => c.type === 'CREDIT') ?? []
+  const allCards = cards ?? []
+  const debitCards = allCards.filter((c) => c.type === 'DEBIT')
+  const creditCards = allCards.filter((c) => c.type === 'CREDIT')
+  const selectedCard = allCards.find((c) => c.id === cardId)
 
   const onSubmit = async (data: ScheduledExpenseFormValues) => {
-    await onAdd(data, filter)
+    const selectedCardForSubmit = allCards.find((c) => c.id === data.cardId)
+    const derivedData: ScheduledExpenseFormValues = {
+      ...data,
+      isCC: selectedCardForSubmit !== undefined && selectedCardForSubmit.type === 'CREDIT',
+    }
+    await onAdd(derivedData, filter)
     reset()
     setOpen(false)
   }
@@ -195,31 +203,12 @@ export function AddScheduledExpenseModal({
             </Label>
           </div>
 
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="s-cc"
-              checked={!!isCC}
-              onCheckedChange={(v) => {
-                setValue('isCC', Boolean(v))
-                if (!v) setValue('cardId', null)
-              }}
-              className="mt-0.5"
-            />
-            <div>
-              <Label
-                htmlFor="s-cc"
-                className="flex cursor-pointer items-center gap-1.5 font-normal"
-              >
-                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                {t('addScheduled.cc')}
-              </Label>
-              <p className="mt-0.5 text-xs text-muted-foreground">{t('addScheduled.ccHint')}</p>
-            </div>
-          </div>
-
-          {isCC && creditCards.length > 0 && (
+          {allCards.length > 0 && (
             <div className="space-y-1.5">
-              <Label>{t('cards.selectCard')}</Label>
+              <Label className="flex items-center gap-1.5">
+                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('cards.selectCard')}
+              </Label>
               <Select
                 value={cardId ?? '__none__'}
                 onValueChange={(v) => setValue('cardId', v === '__none__' ? null : v)}
@@ -229,16 +218,48 @@ export function AddScheduledExpenseModal({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">{t('cards.noCardLinked')}</SelectItem>
-                  {creditCards.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="flex items-center gap-1.5">
-                        <CreditCard className="h-3.5 w-3.5" />
-                        {c.name} ···{c.lastFour}
-                      </span>
-                    </SelectItem>
-                  ))}
+                  {debitCards.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>{t('cards.debit')}</SelectLabel>
+                      {debitCards.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="flex items-center gap-1.5">
+                            <CreditCard className="h-3.5 w-3.5" />
+                            {c.name} ···{c.lastFour}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {creditCards.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>{t('cards.credit')}</SelectLabel>
+                      {creditCards.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="flex items-center gap-1.5">
+                            <CreditCard className="h-3.5 w-3.5" />
+                            {c.name} ···{c.lastFour}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
+              {selectedCard && (
+                <p
+                  className={cn(
+                    'text-xs',
+                    selectedCard.type === 'CREDIT'
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-muted-foreground'
+                  )}
+                >
+                  {selectedCard.type === 'CREDIT'
+                    ? t('addScheduled.ccHint')
+                    : t('addScheduled.debitHint')}
+                </p>
+              )}
             </div>
           )}
 
