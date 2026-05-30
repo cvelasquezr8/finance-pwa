@@ -37,7 +37,6 @@ export const addTransactionSchema = z.object({
   description: z.string().min(2, 'Mínimo 2 caracteres'),
   amount: z.coerce.number().positive('Debe ser mayor a 0'),
   category: categoryEnum.optional(),
-  isCC: z.boolean().default(false),
   cardId: z.string().nullable().optional(),
   eventId: z.string().nullable().optional(),
 })
