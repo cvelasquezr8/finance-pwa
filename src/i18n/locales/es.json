@@ -183,6 +183,7 @@
     "fileFormats": "PNG, JPG o PDF · máx. 10 MB",
     "cc": "CC (Tarjeta de Crédito)",
     "ccHint": "Al seleccionar esta opción, el monto no afectará tu saldo actual del banco.",
+    "debitHint": "El saldo se descontará de inmediato",
     "cancel": "Cancelar",
     "addIncome": "Agregar Ingreso",
     "addExpense": "Agregar Egreso",
@@ -202,6 +203,7 @@
     "recurring": "Gasto recurrente (se repite cada mes)",
     "cc": "CC (Tarjeta de Crédito)",
     "ccHint": "Al seleccionar esta opción, el monto no afectará tu saldo actual del banco.",
+    "debitHint": "El saldo se descontará de inmediato",
     "cancel": "Cancelar",
     "add": "Agregar Gasto",
     "saving": "Guardando..."

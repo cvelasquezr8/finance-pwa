@@ -183,6 +183,7 @@
     "fileFormats": "PNG, JPG or PDF · max. 10 MB",
     "cc": "CC (Credit Card)",
     "ccHint": "Selecting this option will not affect your current bank balance.",
+    "debitHint": "Balance will be deducted immediately",
     "cancel": "Cancel",
     "addIncome": "Add Income",
     "addExpense": "Add Expense",
@@ -202,6 +203,7 @@
     "recurring": "Recurring expense (repeats every month)",
     "cc": "CC (Credit Card)",
     "ccHint": "Selecting this option will not affect your current bank balance.",
+    "debitHint": "Balance will be deducted immediately",
     "cancel": "Cancel",
     "add": "Add Expense",
     "saving": "Saving..."
