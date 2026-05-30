@@ -1,5 +1,6 @@
 'use client'
 
+import { useLayoutEffect, useRef, useState } from 'react'
 import { TrendingDown, TrendingUp, Wallet, CalendarDays } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +9,29 @@ import { formatCurrency } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/useCountUp'
 import type { BalanceSummaryDTO } from '@/core/dtos'
 import { cn } from '@/lib/utils'
+
+/**
+ * Shrinks font-size from `max` down to `min` until the text fits its container.
+ * Runs synchronously before paint so there is no visible jump.
+ */
+function useAutoFontSize(text: string, max: number, min: number) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState(max)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let s = max
+    el.style.fontSize = `${s}px`
+    while (el.scrollWidth > el.clientWidth && s > min) {
+      s -= 0.5
+      el.style.fontSize = `${s}px`
+    }
+    setSize(s)
+  }, [text, max, min])
+
+  return { ref, size }
+}
 
 interface StatCardProps {
   title: string
@@ -30,6 +54,9 @@ function StatCard({
 }: StatCardProps) {
   const animated = useCountUp(rawValue)
   const formatted = formatCurrency(animated)
+
+  // Hero card: shrink from 28px down to 13px. Regular: from 24px to 13px.
+  const { ref, size } = useAutoFontSize(formatted, hero ? 28 : 24, 13)
 
   return (
     <Card
@@ -65,9 +92,11 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div
+          ref={ref}
+          style={{ fontSize: size }}
           className={cn(
-            'break-all font-bold tabular-nums tracking-tight',
-            hero ? 'text-2xl text-primary sm:text-3xl' : 'text-xl sm:text-2xl'
+            'overflow-hidden whitespace-nowrap font-bold tabular-nums tracking-tight',
+            hero ? 'text-primary' : ''
           )}
         >
           {formatted}
