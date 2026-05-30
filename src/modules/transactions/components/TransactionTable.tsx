@@ -253,8 +253,8 @@ export function TransactionTable({
         <div className="hidden overflow-hidden rounded-lg border border-border md:block">
           <table className="w-full table-fixed text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/40">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider [&_th]:font-semibold [&_th]:text-muted-foreground">
+                <th className="px-4 py-2.5 text-left">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.description')}
@@ -265,7 +265,7 @@ export function TransactionTable({
                     t('transactions.description')
                   )}
                 </th>
-                <th className="hidden w-28 px-4 py-3 text-left font-medium text-muted-foreground lg:table-cell">
+                <th className="hidden w-32 px-4 py-2.5 text-left lg:table-cell">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.category')}
@@ -276,7 +276,7 @@ export function TransactionTable({
                     t('transactions.category')
                   )}
                 </th>
-                <th className="w-32 px-4 py-3 text-right font-medium text-muted-foreground">
+                <th className="w-36 px-4 py-2.5 text-right">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.amount')}
@@ -289,11 +289,11 @@ export function TransactionTable({
                   )}
                 </th>
                 {showConfirmColumn && (
-                  <th className="w-12 px-4 py-3 text-center font-medium text-muted-foreground">
-                    {t('transactions.confirmedColumn')}
+                  <th className="w-20 px-2 py-2.5 text-center">
+                    <span className="truncate">{t('transactions.confirmedColumn')}</span>
                   </th>
                 )}
-                <th className="w-28 px-4 py-3 text-center font-medium text-muted-foreground">
+                <th className="w-28 px-2 py-2.5 text-center">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.status')}
@@ -305,15 +305,11 @@ export function TransactionTable({
                     t('transactions.status')
                   )}
                 </th>
-                <th className="hidden w-24 px-4 py-3 text-center font-medium text-muted-foreground lg:table-cell">
-                  CC
-                </th>
+                <th className="hidden w-24 px-2 py-2.5 text-center lg:table-cell">CC</th>
                 {showReceiptColumn && (
-                  <th className="w-14 px-4 py-3 text-center font-medium text-muted-foreground">
-                    {t('transactions.receipt')}
-                  </th>
+                  <th className="w-16 px-2 py-2.5 text-center">{t('transactions.receipt')}</th>
                 )}
-                <th className="w-20 px-4 py-3" />
+                <th className="w-20 px-4 py-2.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -347,14 +343,14 @@ export function TransactionTable({
                     <td className="hidden px-4 py-3 lg:table-cell">
                       <span
                         className={cn(
-                          'rounded-full px-2 py-0.5 text-xs font-medium',
+                          'inline-block max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium',
                           CATEGORY_COLORS[tx.category]
                         )}
                       >
                         {t(`categories.${tx.category}`)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold">
+                    <td className="whitespace-nowrap px-4 py-3 text-right font-mono font-semibold">
                       <span
                         className={
                           tx.type === 'income'
@@ -367,7 +363,7 @@ export function TransactionTable({
                       </span>
                     </td>
                     {showConfirmColumn && (
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-3 text-center">
                         <Checkbox
                           checked={tx.status === 'confirmed'}
                           onCheckedChange={(v) => onConfirm(tx.id, Boolean(v))}
@@ -376,7 +372,7 @@ export function TransactionTable({
                         />
                       </td>
                     )}
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-2 py-3 text-center">
                       <Badge
                         variant={
                           tx.status === 'confirmed'
@@ -393,17 +389,17 @@ export function TransactionTable({
                             : t('transactions.statusPending')}
                       </Badge>
                     </td>
-                    <td className="hidden px-4 py-3 lg:table-cell">
+                    <td className="hidden px-2 py-3 text-center lg:table-cell">
                       {tx.isCC &&
                         (() => {
                           const card = tx.cardId ? cardMap.get(tx.cardId) : undefined
                           return card ? (
                             <span
-                              className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400"
-                              title={t('transactions.ccTooltip')}
+                              className="inline-flex max-w-full items-center gap-1 truncate rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400"
+                              title={`${card.name} ···${card.lastFour}`}
                             >
-                              <CreditCard className="h-2.5 w-2.5" />
-                              {card.name} ···{card.lastFour}
+                              <CreditCard className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate">···{card.lastFour}</span>
                             </span>
                           ) : (
                             <span title={t('transactions.ccTooltip')}>
@@ -413,7 +409,7 @@ export function TransactionTable({
                         })()}
                     </td>
                     {showReceiptColumn && (
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-3 text-center">
                         <ReceiptCell
                           transactionId={tx.id}
                           description={tx.description}
