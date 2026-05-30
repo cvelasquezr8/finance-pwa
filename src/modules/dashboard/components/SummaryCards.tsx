@@ -66,8 +66,8 @@ function StatCard({
       <CardContent>
         <div
           className={cn(
-            'font-bold tabular-nums tracking-tight',
-            hero ? 'text-3xl text-primary' : 'text-2xl'
+            'break-all font-bold tabular-nums tracking-tight',
+            hero ? 'text-2xl text-primary sm:text-3xl' : 'text-xl sm:text-2xl'
           )}
         >
           {formatted}
