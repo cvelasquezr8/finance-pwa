@@ -9,11 +9,12 @@ import { addTransactionSchema, type AddTransactionFormValues } from '../schemas/
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -25,7 +26,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { CATEGORY_LABELS } from '@/lib/utils'
+import { CATEGORY_LABELS, cn } from '@/lib/utils'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import type { CardDTO, BudgetEventDTO } from '@/core/dtos'
 
@@ -76,20 +77,23 @@ export function AddTransactionModal({
     formState: { errors, isSubmitting },
   } = useForm<AddTransactionFormValues>({
     resolver: zodResolver(addTransactionSchema),
-    defaultValues: { mode: 'egreso', category: 'otros', isCC: false, cardId: null, eventId: null },
+    defaultValues: { mode: 'egreso', category: 'otros', cardId: null, eventId: null },
   })
 
-  const isCC = watch('isCC')
   const cardId = watch('cardId')
   const eventId = watch('eventId')
-  const creditCards = cards?.filter((c) => c.type === 'CREDIT') ?? []
+
+  const allCards = cards ?? []
+  const debitCards = allCards.filter((c) => c.type === 'DEBIT')
+  const creditCards = allCards.filter((c) => c.type === 'CREDIT')
+  const selectedCard = allCards.find((c) => c.id === cardId)
   const activeEvents = events?.filter((e) => e.status === 'ACTIVE') ?? []
 
   useEffect(() => {
     if (open) {
       setValue('eventId', defaultEventId ?? null)
     } else {
-      reset({ mode: 'egreso', category: 'otros', isCC: false, cardId: null, eventId: null })
+      reset({ mode: 'egreso', category: 'otros', cardId: null, eventId: null })
       setReceipt(null)
       setMode('egreso')
     }
@@ -101,18 +105,20 @@ export function AddTransactionModal({
   }
 
   const onSubmit = async (data: AddTransactionFormValues) => {
+    const selectedCardForSubmit = allCards.find((c) => c.id === data.cardId)
+    const isCC = selectedCardForSubmit !== undefined && selectedCardForSubmit.type === 'CREDIT'
     await onAdd(
       mode,
       data.description,
       data.amount,
       data.category,
-      data.isCC ?? false,
+      isCC,
       receipt,
       filter,
-      data.isCC ? (data.cardId ?? null) : null,
+      data.cardId ?? null,
       mode === 'egreso' ? (data.eventId ?? null) : null
     )
-    reset({ mode: 'egreso', category: 'otros', isCC: false, cardId: null, eventId: null })
+    reset({ mode: 'egreso', category: 'otros', cardId: null, eventId: null })
     setReceipt(null)
     setMode('egreso')
     setOpen(false)
@@ -241,33 +247,12 @@ export function AddTransactionModal({
                 </div>
               )}
 
-              <div className="flex items-start gap-2">
-                <Checkbox
-                  id="at-cc"
-                  checked={!!isCC}
-                  onCheckedChange={(v) => {
-                    setValue('isCC', Boolean(v))
-                    if (!v) setValue('cardId', null)
-                  }}
-                  className="mt-0.5"
-                />
-                <div>
-                  <Label
-                    htmlFor="at-cc"
-                    className="flex cursor-pointer items-center gap-1.5 font-normal"
-                  >
-                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t('addTransaction.cc')}
-                  </Label>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {t('addTransaction.ccHint')}
-                  </p>
-                </div>
-              </div>
-
-              {isCC && creditCards.length > 0 && (
+              {allCards.length > 0 && (
                 <div className="space-y-1.5">
-                  <Label>{t('cards.selectCard')}</Label>
+                  <Label className="flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('cards.selectCard')}
+                  </Label>
                   <Select
                     value={cardId ?? '__none__'}
                     onValueChange={(v) => setValue('cardId', v === '__none__' ? null : v)}
@@ -277,16 +262,48 @@ export function AddTransactionModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">{t('cards.noCardLinked')}</SelectItem>
-                      {creditCards.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          <span className="flex items-center gap-1.5">
-                            <CreditCard className="h-3.5 w-3.5" />
-                            {c.name} ···{c.lastFour}
-                          </span>
-                        </SelectItem>
-                      ))}
+                      {debitCards.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel>{t('cards.debit')}</SelectLabel>
+                          {debitCards.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              <span className="flex items-center gap-1.5">
+                                <CreditCard className="h-3.5 w-3.5" />
+                                {c.name} ···{c.lastFour}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+                      {creditCards.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel>{t('cards.credit')}</SelectLabel>
+                          {creditCards.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              <span className="flex items-center gap-1.5">
+                                <CreditCard className="h-3.5 w-3.5" />
+                                {c.name} ···{c.lastFour}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
                     </SelectContent>
                   </Select>
+                  {selectedCard && (
+                    <p
+                      className={cn(
+                        'text-xs',
+                        selectedCard.type === 'CREDIT'
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      {selectedCard.type === 'CREDIT'
+                        ? t('addTransaction.ccHint')
+                        : t('addTransaction.debitHint')}
+                    </p>
+                  )}
                 </div>
               )}
             </>
