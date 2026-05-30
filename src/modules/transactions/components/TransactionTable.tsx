@@ -250,8 +250,8 @@ export function TransactionTable({
           </h3>
         )}
 
-        <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
-          <table className="w-full text-sm">
+        <div className="hidden overflow-hidden rounded-lg border border-border md:block">
+          <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
@@ -265,7 +265,7 @@ export function TransactionTable({
                     t('transactions.description')
                   )}
                 </th>
-                <th className="hidden px-4 py-3 text-left font-medium text-muted-foreground sm:table-cell">
+                <th className="hidden w-28 px-4 py-3 text-left font-medium text-muted-foreground lg:table-cell">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.category')}
@@ -276,7 +276,7 @@ export function TransactionTable({
                     t('transactions.category')
                   )}
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                <th className="w-32 px-4 py-3 text-right font-medium text-muted-foreground">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.amount')}
@@ -289,11 +289,11 @@ export function TransactionTable({
                   )}
                 </th>
                 {showConfirmColumn && (
-                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                  <th className="w-12 px-4 py-3 text-center font-medium text-muted-foreground">
                     {t('transactions.confirmedColumn')}
                   </th>
                 )}
-                <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                <th className="w-28 px-4 py-3 text-center font-medium text-muted-foreground">
                   {sortableProps ? (
                     <SortableHeader
                       label={t('transactions.status')}
@@ -305,15 +305,15 @@ export function TransactionTable({
                     t('transactions.status')
                   )}
                 </th>
-                <th className="hidden px-4 py-3 text-center font-medium text-muted-foreground sm:table-cell">
+                <th className="hidden w-24 px-4 py-3 text-center font-medium text-muted-foreground lg:table-cell">
                   CC
                 </th>
                 {showReceiptColumn && (
-                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                  <th className="w-14 px-4 py-3 text-center font-medium text-muted-foreground">
                     {t('transactions.receipt')}
                   </th>
                 )}
-                <th className="px-4 py-3" />
+                <th className="w-20 px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -336,15 +336,15 @@ export function TransactionTable({
                       tx.status === 'confirmed' && 'bg-emerald-500/5 dark:bg-emerald-500/10'
                     )}
                   >
-                    <td className="px-4 py-3 font-medium">
-                      <div>{tx.description}</div>
+                    <td className="max-w-0 px-4 py-3 font-medium">
+                      <div className="truncate">{tx.description}</div>
                       {tx.isRecurring && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="truncate text-xs text-muted-foreground">
                           {t('transactions.recurring', { day: tx.dueDay })}
                         </span>
                       )}
                     </td>
-                    <td className="hidden px-4 py-3 sm:table-cell">
+                    <td className="hidden px-4 py-3 lg:table-cell">
                       <span
                         className={cn(
                           'rounded-full px-2 py-0.5 text-xs font-medium',
@@ -393,7 +393,7 @@ export function TransactionTable({
                             : t('transactions.statusPending')}
                       </Badge>
                     </td>
-                    <td className="hidden px-4 py-3 sm:table-cell">
+                    <td className="hidden px-4 py-3 lg:table-cell">
                       {tx.isCC &&
                         (() => {
                           const card = tx.cardId ? cardMap.get(tx.cardId) : undefined
@@ -453,18 +453,10 @@ export function TransactionTable({
             {!isLoading && transactions.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border bg-muted/20">
-                  <td
-                    colSpan={2}
-                    className="hidden px-4 py-2.5 text-sm font-semibold text-muted-foreground sm:table-cell"
-                  >
+                  <td className="px-4 py-2.5 text-sm font-semibold text-muted-foreground">
                     {t('transactions.total')}
                   </td>
-                  <td
-                    colSpan={1}
-                    className="px-4 py-2.5 text-sm font-semibold text-muted-foreground sm:hidden"
-                  >
-                    {t('transactions.total')}
-                  </td>
+                  <td className="hidden lg:table-cell" />
                   <td className="px-4 py-2.5 text-right font-mono font-bold">
                     <span
                       className={

@@ -190,7 +190,7 @@ function UserRow({
           </div>
         </div>
       </td>
-      <td className="px-4 py-3">
+      <td className="hidden px-4 py-3 lg:table-cell">
         <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
           {user.alias}
         </span>
@@ -213,7 +213,7 @@ function UserRow({
           {t(`admin.status.${user.status}`)}
         </span>
       </td>
-      <td className="px-4 py-3 text-xs text-muted-foreground">
+      <td className="hidden px-4 py-3 text-xs text-muted-foreground lg:table-cell">
         {new Date(user.createdAt).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'short',
@@ -348,8 +348,8 @@ export function AdminUsersPage() {
           </div>
 
           <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div>
+              <table className="w-full table-fixed text-sm">
                 <thead className="border-b border-border bg-muted/40">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
@@ -361,7 +361,7 @@ export function AdminUsersPage() {
                         onSort={tableState.toggleSort}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                    <th className="hidden w-24 px-4 py-3 text-left text-xs font-medium text-muted-foreground lg:table-cell">
                       <SortableHeader
                         label={t('admin.columns.alias')}
                         field="alias"
@@ -370,7 +370,7 @@ export function AdminUsersPage() {
                         onSort={tableState.toggleSort}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                    <th className="w-20 px-4 py-3 text-left text-xs font-medium text-muted-foreground">
                       <SortableHeader
                         label={t('admin.columns.role')}
                         field="role"
@@ -379,7 +379,7 @@ export function AdminUsersPage() {
                         onSort={tableState.toggleSort}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                    <th className="w-24 px-4 py-3 text-left text-xs font-medium text-muted-foreground">
                       <SortableHeader
                         label={t('admin.columns.status')}
                         field="status"
@@ -388,7 +388,7 @@ export function AdminUsersPage() {
                         onSort={tableState.toggleSort}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                    <th className="hidden w-28 px-4 py-3 text-left text-xs font-medium text-muted-foreground lg:table-cell">
                       <SortableHeader
                         label={t('admin.columns.registered')}
                         field="createdAt"
@@ -397,7 +397,7 @@ export function AdminUsersPage() {
                         onSort={tableState.toggleSort}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                    <th className="w-14 px-4 py-3 text-left text-xs font-medium text-muted-foreground">
                       {t('admin.columns.actions')}
                     </th>
                   </tr>
