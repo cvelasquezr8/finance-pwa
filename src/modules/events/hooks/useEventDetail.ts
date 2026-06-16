@@ -72,6 +72,22 @@ export function useEventDetail(eventId: string, txQuery: PaginationQueryDTO = {}
     },
   })
 
+  const closeMutation = useMutation({
+    mutationFn: () => eventService.closeEvent(eventId),
+    onSuccess: (event) => {
+      queryClient.setQueryData(['events', 'detail', eventId], event)
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+  })
+
+  const reopenMutation = useMutation({
+    mutationFn: () => eventService.reopenEvent(eventId),
+    onSuccess: (event) => {
+      queryClient.setQueryData(['events', 'detail', eventId], event)
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+  })
+
   // Refetch on global "financeDataChanged" events (e.g. expense registration).
   useEffect(() => {
     const handler = () => {
@@ -102,5 +118,9 @@ export function useEventDetail(eventId: string, txQuery: PaginationQueryDTO = {}
       respondMutation.mutateAsync(status),
     addShoppingItem: (dto: AddShoppingItemDTO) => addItemMutation.mutateAsync(dto),
     toggleShoppingItem: (dto: ToggleShoppingItemDTO) => toggleItemMutation.mutateAsync(dto),
+    closeEvent: () => closeMutation.mutateAsync(),
+    reopenEvent: () => reopenMutation.mutateAsync(),
+    isClosing: closeMutation.isPending,
+    isReopening: reopenMutation.isPending,
   }
 }

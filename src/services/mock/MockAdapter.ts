@@ -808,7 +808,7 @@ export const mockTransactionService = {
       isCC: dto.isCC ?? false,
       cardId: dto.cardId ?? null,
       eventId: dto.eventId ?? null,
-      userId: dto.userId ?? null,
+      userId: 'mock-user',
       status: autoConfirm ? 'confirmed' : 'pending',
       receiptUrl: null,
       confirmedAt: autoConfirm ? iso() : null,

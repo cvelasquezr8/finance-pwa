@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CalendarClock, Loader2, CreditCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
-  scheduledExpenseSchema,
+  createScheduledExpenseSchema,
   type ScheduledExpenseFormValues,
 } from '../schemas/transactionSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -56,6 +57,7 @@ export function AddScheduledExpenseModal({
   const open = isControlled ? controlledOpen! : internalOpen
   const setOpen = isControlled ? onOpenChange! : setInternalOpen
 
+  const schema = useMemo(() => createScheduledExpenseSchema(validationMessages(t)), [t])
   const effectiveQuincena = filter.quincena === 'mensual' ? 'primera' : filter.quincena
   const {
     register,
@@ -65,7 +67,7 @@ export function AddScheduledExpenseModal({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ScheduledExpenseFormValues>({
-    resolver: zodResolver(scheduledExpenseSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       category: 'otros',
       quincena: effectiveQuincena,

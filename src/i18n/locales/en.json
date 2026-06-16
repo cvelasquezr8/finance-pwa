@@ -2,6 +2,23 @@
   "common": {
     "dialogForm": "Dialog form"
   },
+  "validation": {
+    "required": "Required",
+    "invalidEmail": "Invalid email",
+    "minChars": "At least {{n}} characters",
+    "maxChars": "At most {{n}} characters",
+    "positive": "Must be greater than 0",
+    "notNegative": "Cannot be negative",
+    "passwordMatch": "Passwords do not match",
+    "aliasFormat": "Lowercase letters, numbers and _ only — must start with @",
+    "selectCard": "Select a card",
+    "minPercent": "Minimum {{n}}%",
+    "maxPercent": "Maximum {{n}}%",
+    "exactFourDigits": "Must be exactly 4 digits",
+    "passwordUppercase": "At least 1 uppercase letter",
+    "passwordLowercase": "At least 1 lowercase letter",
+    "passwordNumber": "At least 1 number"
+  },
   "months": [
     "January",
     "February",
@@ -84,6 +101,8 @@
     "signInLink": "Sign in",
     "registerError": "Registration failed",
     "registerErrorDesc": "Please try again",
+    "registerPendingTitle": "Account created",
+    "registerPendingDesc": "An administrator will review and approve your access. Please sign in once confirmed.",
     "alias": "Alias *",
     "aliasHint": "Unique handle for invitations, e.g. @juan_garcia"
   },
@@ -114,7 +133,16 @@
     "dark": "Dark",
     "light": "Light",
     "alias": "Alias (cannot be changed)",
-    "emailReadOnly": "Email (cannot be changed)"
+    "emailReadOnly": "Email (cannot be changed)",
+    "deleteAccount": "Delete Account",
+    "deleteAccountTitle": "Delete your account?",
+    "deleteAccountDesc": "This action is permanent. Your personal data will be anonymized and your session will be closed immediately. Shared transactions in events will be preserved.",
+    "deleteAccountConfirmLabel": "Type DELETE to confirm",
+    "deleteAccountConfirmPlaceholder": "DELETE",
+    "deleteAccountCta": "Delete my account",
+    "deleteAccountDeleting": "Deleting...",
+    "deleteAccountSuccess": "Account deleted",
+    "deleteAccountError": "Could not delete account"
   },
   "summary": {
     "currentBalance": "Current Balance",
@@ -435,7 +463,7 @@
     },
     "eventStatus": {
       "ACTIVE": "Active",
-      "COMPLETED": "Completed",
+      "COMPLETED": "Closed",
       "CANCELLED": "Cancelled"
     },
     "shoppingList": "Shopping List",
@@ -467,6 +495,10 @@
     "columnUser": "User",
     "columnDescription": "Description",
     "columnAmount": "Amount",
-    "unknownUser": "Unknown"
+    "unknownUser": "Unknown",
+    "closeEvent": "Close event",
+    "reopenEvent": "Reopen event",
+    "closeSuccess": "Event closed",
+    "reopenSuccess": "Event reopened"
   }
 }

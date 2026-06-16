@@ -5,8 +5,8 @@ import { TrendingDown, TrendingUp, Wallet, CalendarDays } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/useCountUp'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import type { BalanceSummaryDTO } from '@/core/dtos'
 import { cn } from '@/lib/utils'
 
@@ -52,6 +52,7 @@ function StatCard({
   hero,
   staggerClass,
 }: StatCardProps) {
+  const formatCurrency = useCurrency()
   const animated = useCountUp(rawValue)
   const formatted = formatCurrency(animated)
 
@@ -131,6 +132,7 @@ export function SummaryCards({
   animationKey?: string
 }) {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
 
   if (isLoading) {
     return (

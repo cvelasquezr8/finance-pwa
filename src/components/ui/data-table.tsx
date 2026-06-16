@@ -5,6 +5,7 @@ import {
   ChevronUp,
   ChevronDown,
   Search,
+  Inbox,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -189,7 +190,7 @@ export function DataTablePagination({
   return (
     <div
       className={cn(
-        'hidden flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2.5 text-xs md:flex',
+        'hidden flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-4 py-2.5 text-xs md:flex',
         className
       )}
     >
@@ -358,11 +359,12 @@ export function DataTableEmpty({ message, className }: DataTableEmptyProps) {
   return (
     <div
       className={cn(
-        'flex items-center justify-center px-4 py-10 text-sm text-muted-foreground',
+        'flex flex-col items-center justify-center gap-2 px-4 py-12 text-center',
         className
       )}
     >
-      {message ?? t('pagination.noResults')}
+      <Inbox className="h-8 w-8 text-muted-foreground/40" />
+      <p className="text-sm text-muted-foreground">{message ?? t('pagination.noResults')}</p>
     </div>
   )
 }

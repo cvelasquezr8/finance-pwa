@@ -1,24 +1,91 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TrendingUp, Loader2, AtSign } from 'lucide-react'
+import { TrendingUp, Loader2, AtSign, Check, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { registerSchema, type RegisterFormValues } from '../schemas/authSchemas'
+import { createRegisterSchema, type RegisterFormValues } from '../schemas/authSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 
 interface Props {
   onSwitchToLogin: () => void
 }
 
+interface PasswordRule {
+  key: string
+  label: string
+  test: (v: string) => boolean
+}
+
+function PasswordStrength({ password, rules }: { password: string; rules: PasswordRule[] }) {
+  const passed = rules.filter((r) => r.test(password)).length
+  if (!password) return null
+
+  const segments = rules.length
+  const colors = ['bg-destructive', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500']
+  const barColor = colors[Math.min(passed - 1, colors.length - 1)] ?? 'bg-muted'
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Strength bar */}
+      <div className="flex gap-1">
+        {Array.from({ length: segments }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              'h-1 flex-1 rounded-full transition-all duration-300',
+              i < passed ? barColor : 'bg-muted'
+            )}
+          />
+        ))}
+      </div>
+      {/* Requirements list */}
+      <ul className="space-y-0.5">
+        {rules.map((rule) => {
+          const ok = rule.test(password)
+          return (
+            <li
+              key={rule.key}
+              className={cn(
+                'flex items-center gap-1.5 text-xs transition-colors',
+                ok ? 'text-green-500' : 'text-muted-foreground'
+              )}
+            >
+              {ok ? <Check className="h-3 w-3 shrink-0" /> : <X className="h-3 w-3 shrink-0" />}
+              {rule.label}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 export function RegisterForm({ onSwitchToLogin }: Props) {
   const { t } = useTranslation()
   const { register: registerUser } = useAuth()
+  const schema = useMemo(() => createRegisterSchema(validationMessages(t)), [t])
+  const [passwordValue, setPasswordValue] = useState('')
+
+  const passwordRules: PasswordRule[] = useMemo(
+    () => [
+      { key: 'length', label: t('validation.minChars', { n: 8 }), test: (v) => v.length >= 8 },
+      { key: 'upper', label: t('validation.passwordUppercase'), test: (v) => /[A-Z]/.test(v) },
+      { key: 'lower', label: t('validation.passwordLowercase'), test: (v) => /[a-z]/.test(v) },
+      { key: 'number', label: t('validation.passwordNumber'), test: (v) => /[0-9]/.test(v) },
+    ],
+    [t]
+  )
+
   const {
     register,
     handleSubmit,
@@ -26,7 +93,7 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(schema),
   })
 
   const aliasValue = watch('alias') ?? ''
@@ -40,6 +107,11 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
   const onSubmit = async (data: RegisterFormValues) => {
     try {
       await registerUser(data.firstName, data.lastName, data.email, data.password, data.alias)
+      toast({
+        title: t('auth.registerPendingTitle'),
+        description: t('auth.registerPendingDesc'),
+      })
+      onSwitchToLogin()
     } catch (err) {
       toast({
         title: t('auth.registerError'),
@@ -117,23 +189,27 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="password">{t('auth.passwordRequired')}</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder={t('auth.passwordPlaceholder')}
-                {...register('password')}
+                {...register('password', {
+                  onChange: (e) => setPasswordValue(e.target.value),
+                })}
               />
-              {errors.password && (
+              {errors.password ? (
                 <p className="text-xs text-destructive">{errors.password.message}</p>
+              ) : (
+                <PasswordStrength password={passwordValue} rules={passwordRules} />
               )}
             </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 placeholder={t('auth.passwordPlaceholder')}
                 {...register('confirmPassword')}
               />
@@ -141,6 +217,7 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
                 <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
               )}
             </div>
+
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>

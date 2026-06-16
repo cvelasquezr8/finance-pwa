@@ -18,19 +18,18 @@ class AuthService extends BaseApiService {
     return { user: res.user, token: res.token }
   }
 
-  async register(dto: RegisterRequestDTO): Promise<{ user: User; token: string }> {
-    const res: AuthResponseDTO = useMock()
-      ? await mockAuthService.register(
-          dto.firstName,
-          dto.lastName,
-          dto.email,
-          dto.password,
-          dto.alias
-        )
-      : await this.post<AuthResponseDTO, RegisterRequestDTO>(API_ROUTES.auth.register, dto)
-
-    setStoredToken(res.token)
-    return { user: res.user, token: res.token }
+  async register(dto: RegisterRequestDTO): Promise<void> {
+    if (useMock()) {
+      await mockAuthService.register(
+        dto.firstName,
+        dto.lastName,
+        dto.email,
+        dto.password,
+        dto.alias
+      )
+      return
+    }
+    await this.post<{ message: string }, RegisterRequestDTO>(API_ROUTES.auth.register, dto)
   }
 
   async logout(): Promise<void> {
@@ -54,6 +53,12 @@ class AuthService extends BaseApiService {
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     if (useMock()) return
     await this.post(API_ROUTES.auth.changePassword, { currentPassword, newPassword })
+  }
+
+  async deleteMyAccount(): Promise<void> {
+    if (useMock()) return
+    await this.delete(API_ROUTES.users.deleteMe)
+    clearStoredTokens()
   }
 }
 

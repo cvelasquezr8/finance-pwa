@@ -5,9 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
-  adjustBalanceSchema,
+  createAdjustBalanceSchema,
   type AdjustBalanceFormValues,
 } from '@/modules/transactions/schemas/transactionSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +21,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 interface Props {
   currentBalance: number
@@ -40,13 +41,14 @@ export function BalanceAdjustmentModal({
   const isControlled = controlledOpen !== undefined
   const open = isControlled ? controlledOpen! : internalOpen
   const setOpen = isControlled ? onOpenChange! : setInternalOpen
+  const schema = useMemo(() => createAdjustBalanceSchema(validationMessages(t)), [t])
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AdjustBalanceFormValues>({
-    resolver: zodResolver(adjustBalanceSchema),
+    resolver: zodResolver(schema),
     defaultValues: { newBalance: currentBalance, reason: '' },
   })
 

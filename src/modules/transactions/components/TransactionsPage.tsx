@@ -7,7 +7,8 @@ import { useCards } from '@/modules/cards/hooks/useCards'
 import { PaginatedTransactionSection } from './PaginatedTransactionSection'
 import { MonthFilter } from '@/components/layout/MonthFilter'
 import { FilterBar } from '@/components/layout/FilterBar'
-import { getQuincena, getQuincenaDateRangeLabel, formatCurrency, cn } from '@/lib/utils'
+import { getQuincena, getQuincenaDateRangeLabel, cn } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import type { MonthFilter as MonthFilterType, QuincenaFilter } from '@/core/types'
 import {
   Select,
@@ -20,6 +21,7 @@ import { CreditCard } from 'lucide-react'
 
 export function TransactionsPage() {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
   const now = new Date()
   const [filter, setFilter] = useState<MonthFilterType & { quincena: QuincenaFilter }>({
     month: now.getMonth() + 1,

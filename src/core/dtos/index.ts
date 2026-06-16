@@ -26,7 +26,6 @@ export interface RegisterRequestDTO {
   secondLastName?: string
   email: string
   password: string
-  confirmPassword: string
   alias: string
 }
 
@@ -69,7 +68,6 @@ export interface CreateTransactionDTO {
   isCC: boolean
   cardId?: string | null
   eventId?: string | null
-  userId?: string | null
 }
 
 export interface UpdateTransactionDTO extends Partial<CreateTransactionDTO> {

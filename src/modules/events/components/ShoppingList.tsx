@@ -1,15 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckSquare2, Square, Plus, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { addShoppingItemSchema, type AddShoppingItemFormValues } from '../schemas/eventSchemas'
+import {
+  createAddShoppingItemSchema,
+  type AddShoppingItemFormValues,
+} from '../schemas/eventSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import type { ShoppingItem } from '@/core/types'
 import type { AddShoppingItemDTO, ToggleShoppingItemDTO } from '@/core/dtos'
 
@@ -31,6 +36,7 @@ export function ShoppingList({
   const { t } = useTranslation()
   const [showForm, setShowForm] = useState(false)
   const [toggling, setToggling] = useState<string | null>(null)
+  const schema = useMemo(() => createAddShoppingItemSchema(validationMessages(t)), [t])
 
   const {
     register,
@@ -38,7 +44,7 @@ export function ShoppingList({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AddShoppingItemFormValues>({
-    resolver: zodResolver(addShoppingItemSchema),
+    resolver: zodResolver(schema),
   })
 
   const onSubmit = async (data: AddShoppingItemFormValues) => {
@@ -60,14 +66,8 @@ export function ShoppingList({
     }
   }
 
-  const fmt = (n?: number) =>
-    n != null
-      ? new Intl.NumberFormat(undefined, {
-          style: 'currency',
-          currency: 'MXN',
-          maximumFractionDigits: 0,
-        }).format(n)
-      : null
+  const formatCurrency = useCurrency()
+  const fmt = (n?: number) => (n != null ? formatCurrency(n) : null)
 
   return (
     <div className="space-y-3">

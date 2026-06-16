@@ -18,7 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SortableHeader } from '@/components/ui/data-table'
 import { ReceiptCell } from './ReceiptCell'
 import { EditTransactionModal } from './EditTransactionModal'
-import { formatCurrency, CATEGORY_COLORS } from '@/lib/utils'
+import { CATEGORY_COLORS } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import type { TransactionResponseDTO, UpdateTransactionDTO, CardDTO } from '@/core/dtos'
 import type { SortOrder } from '@/lib/hooks/useDataTableState'
 import { cn } from '@/lib/utils'
@@ -87,6 +88,7 @@ function MobileTransactionRow({
   onDelete,
   t,
 }: MobileRowProps) {
+  const formatCurrency = useCurrency()
   const statusVariant =
     tx.status === 'confirmed' ? 'success' : tx.status === 'cancelled' ? 'destructive' : 'warning'
   const statusLabel =
@@ -215,6 +217,7 @@ export function TransactionTable({
   onSort,
 }: Props) {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
   const [editingTx, setEditingTx] = useState<TransactionResponseDTO | null>(null)
 
   const cardMap = useMemo(() => {
@@ -244,16 +247,12 @@ export function TransactionTable({
   return (
     <>
       <div className="space-y-3">
-        {title && (
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {title}
-          </h3>
-        )}
+        {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
 
         <div className="hidden overflow-hidden rounded-lg border border-border md:block">
           <table className="w-full table-fixed text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider [&_th]:font-semibold [&_th]:text-muted-foreground">
+              <tr className="border-b border-border bg-muted/30 [&_th]:text-xs [&_th]:font-medium [&_th]:text-muted-foreground/80">
                 <th className="px-4 py-2.5 text-left">
                   {sortableProps ? (
                     <SortableHeader
@@ -322,14 +321,13 @@ export function TransactionTable({
                   </td>
                 </tr>
               ) : (
-                transactions.map((tx, idx) => (
+                transactions.map((tx) => (
                   <tr
                     key={tx.id}
                     className={cn(
-                      'border-b border-border transition-colors duration-150',
-                      'hover:bg-accent/50',
-                      idx % 2 === 1 && 'bg-muted/30',
-                      tx.status === 'confirmed' && 'bg-emerald-500/5 dark:bg-emerald-500/10'
+                      'border-b border-border/60 transition-colors duration-150 last:border-0',
+                      'hover:bg-muted/40',
+                      tx.status === 'confirmed' && 'bg-emerald-500/5 dark:bg-emerald-500/[0.08]'
                     )}
                   >
                     <td className="max-w-0 px-4 py-3 font-medium">
@@ -448,8 +446,8 @@ export function TransactionTable({
             </tbody>
             {!isLoading && transactions.length > 0 && (
               <tfoot>
-                <tr className="border-t border-border bg-muted/20">
-                  <td className="px-4 py-2.5 text-sm font-semibold text-muted-foreground">
+                <tr className="border-t border-border bg-muted/30">
+                  <td className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t('transactions.total')}
                   </td>
                   <td className="hidden lg:table-cell" />

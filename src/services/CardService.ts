@@ -7,12 +7,12 @@ import type { CardDTO, CreateCardDTO } from '@/core/dtos'
 class CardService extends BaseApiService {
   async listCards(userId: string): Promise<CardDTO[]> {
     if (useMock()) return mockCardService.listCards(userId)
-    return this.get(API_ROUTES.cards.list, { params: { userId } })
+    return this.get(API_ROUTES.cards.list)
   }
 
   async createCard(userId: string, dto: CreateCardDTO): Promise<CardDTO> {
     if (useMock()) return mockCardService.createCard(userId, dto)
-    return this.post(API_ROUTES.cards.list, { ...dto, userId })
+    return this.post(API_ROUTES.cards.list, dto)
   }
 
   async deleteCard(id: string): Promise<void> {

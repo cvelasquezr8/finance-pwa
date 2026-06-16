@@ -13,7 +13,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { TransactionResponseDTO } from '@/core/dtos'
-import { CATEGORY_LABELS, formatCurrency, cn } from '@/lib/utils'
+import { CATEGORY_LABELS, cn } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const CHART_PALETTE = [
@@ -41,6 +42,7 @@ export function CategorySpendingChart({
   className?: string
 }) {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
 
   const data = useMemo<CategoryPoint[]>(() => {
     const map = new Map<string, number>()

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Plus, ArrowLeftRight, CalendarClock, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
@@ -25,11 +26,10 @@ function useCurrentFilter(): MonthFilter & { quincena: QuincenaFilter } {
   return { month: now.getMonth() + 1, year: now.getFullYear(), quincena: getQuincena(now) }
 }
 
-const dispatch = () => window.dispatchEvent(new CustomEvent('financeDataChanged'))
-
 export function FloatingActionButton() {
   const { t } = useTranslation()
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const filter = useCurrentFilter()
   const [isOpen, setIsOpen] = useState(false)
   const [activeModal, setActiveModal] = useState<ActiveModal>(null)
@@ -71,7 +71,7 @@ export function FloatingActionButton() {
       const now = new Date()
       await balanceService.adjust({ newBalance, reason, adjustmentDate: now.toISOString() })
       toast({ title: t('fab.balanceAdjusted') })
-      dispatch()
+      await queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
     } catch {
       toast({ title: t('fab.balanceError'), variant: 'destructive' })
     }
@@ -104,7 +104,6 @@ export function FloatingActionButton() {
         isCC: mode === 'income' ? false : isCC,
         cardId: mode === 'income' ? null : (cardId ?? null),
         eventId: mode === 'income' ? null : (eventId ?? null),
-        userId: user.id,
       })
       if (receipt) {
         try {
@@ -117,7 +116,8 @@ export function FloatingActionButton() {
         title: mode === 'income' ? t('fab.incomeAdded') : t('fab.expenseAdded'),
         description,
       })
-      dispatch()
+      await queryClient.invalidateQueries({ queryKey: ['transactions'], exact: false })
+      await queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
     } catch {
       toast({ title: t('fab.transactionError'), variant: 'destructive' })
     }
@@ -139,7 +139,8 @@ export function FloatingActionButton() {
         cardId: data.cardId ?? null,
       })
       toast({ title: t('fab.scheduledAdded'), description: data.description })
-      dispatch()
+      await queryClient.invalidateQueries({ queryKey: ['transactions'], exact: false })
+      await queryClient.invalidateQueries({ queryKey: ['balance'], exact: false })
     } catch {
       toast({ title: t('fab.scheduledError'), variant: 'destructive' })
     }

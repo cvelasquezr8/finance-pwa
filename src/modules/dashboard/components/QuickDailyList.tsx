@@ -6,7 +6,8 @@ import { ArrowLeftRight } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { TransactionResponseDTO } from '@/core/dtos'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
-import { formatCurrency, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 
 export function QuickDailyList({
   transactions,
@@ -20,6 +21,7 @@ export function QuickDailyList({
 }) {
   const { t } = useTranslation()
   const router = useRouter()
+  const formatCurrency = useCurrency()
 
   const recent = [...transactions].sort((a, b) => b.dueDay - a.dueDay).slice(0, 5)
 

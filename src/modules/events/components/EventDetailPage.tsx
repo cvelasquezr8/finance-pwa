@@ -2,7 +2,16 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, CalendarDays, Loader2, UserPlus, XCircle, Plus } from 'lucide-react'
+import {
+  ArrowLeft,
+  CalendarDays,
+  Loader2,
+  UserPlus,
+  XCircle,
+  Plus,
+  Lock,
+  LockOpen,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEventDetail } from '../hooks/useEventDetail'
@@ -16,6 +25,7 @@ import { transactionService } from '@/services/TransactionService'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { cn, getQuincena } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import {
   DataTablePagination,
   DataTableSearch,
@@ -37,6 +47,7 @@ export function EventDetailPage() {
   const router = useRouter()
   const [inviteOpen, setInviteOpen] = useState(false)
   const [txModalOpen, setTxModalOpen] = useState(false)
+  const fmt = useCurrency()
 
   const { cards } = useCards()
 
@@ -57,6 +68,10 @@ export function EventDetailPage() {
     respondInvitation,
     addShoppingItem,
     toggleShoppingItem,
+    closeEvent,
+    reopenEvent,
+    isClosing,
+    isReopening,
   } = useEventDetail(id ?? '', tableState.query)
 
   const now = new Date()
@@ -87,6 +102,8 @@ export function EventDetailPage() {
   }
 
   const isCreator = event.createdBy === user?.id
+  const isAdmin = user?.role === 'ADMIN'
+  const canManageStatus = isCreator || isAdmin
   const contributed = linkedTransactions
     .filter((tx) => tx.status === 'confirmed')
     .reduce((s, tx) => s + tx.amount, 0)
@@ -121,6 +138,24 @@ export function EventDetailPage() {
     }
   }
 
+  const handleCloseEvent = async () => {
+    try {
+      await closeEvent()
+      toast({ title: t('events.closeSuccess') })
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: 'destructive' })
+    }
+  }
+
+  const handleReopenEvent = async () => {
+    try {
+      await reopenEvent()
+      toast({ title: t('events.reopenSuccess') })
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: 'destructive' })
+    }
+  }
+
   const handleRegisterExpense = async (
     _mode: 'income' | 'egreso',
     description: string,
@@ -148,7 +183,6 @@ export function EventDetailPage() {
         isCC: isCC,
         cardId: cardId ?? null,
         eventId: eventId ?? null,
-        userId: user?.id ?? null,
       })
       if (receipt) {
         try {
@@ -163,13 +197,6 @@ export function EventDetailPage() {
       toast({ title: t('events.expenseError'), variant: 'destructive' })
     }
   }
-
-  const fmt = (n: number) =>
-    new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: 'MXN',
-      maximumFractionDigits: 0,
-    }).format(n)
 
   const sortOptions = [
     { field: 'createdAt', label: t('transactions.date') },
@@ -195,16 +222,50 @@ export function EventDetailPage() {
               <p className="mt-0.5 text-sm text-muted-foreground">{event.description}</p>
             )}
           </div>
-          <span
-            className={cn(
-              'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
-              event.status === 'ACTIVE' && 'bg-success/15 text-success',
-              event.status === 'CANCELLED' && 'bg-destructive/15 text-destructive',
-              event.status === 'COMPLETED' && 'bg-primary/15 text-primary'
+          <div className="flex shrink-0 items-center gap-2">
+            <span
+              className={cn(
+                'rounded-full px-2.5 py-0.5 text-xs font-medium',
+                event.status === 'ACTIVE' && 'bg-success/15 text-success',
+                event.status === 'CANCELLED' && 'bg-destructive/15 text-destructive',
+                event.status === 'COMPLETED' && 'bg-muted text-muted-foreground'
+              )}
+            >
+              {t(`events.eventStatus.${event.status}`)}
+            </span>
+            {canManageStatus && event.status === 'ACTIVE' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 border-muted-foreground/30 px-2 text-xs text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+                onClick={handleCloseEvent}
+                disabled={isClosing}
+              >
+                {isClosing ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Lock className="h-3 w-3" />
+                )}
+                {t('events.closeEvent')}
+              </Button>
             )}
-          >
-            {t(`events.eventStatus.${event.status}`)}
-          </span>
+            {canManageStatus && event.status === 'COMPLETED' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 border-muted-foreground/30 px-2 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary"
+                onClick={handleReopenEvent}
+                disabled={isReopening}
+              >
+                {isReopening ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <LockOpen className="h-3 w-3" />
+                )}
+                {t('events.reopenEvent')}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">

@@ -1,11 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { PlusCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { dailyExpenseSchema, type DailyExpenseFormValues } from '../schemas/transactionSchemas'
+import {
+  createDailyExpenseSchema,
+  type DailyExpenseFormValues,
+} from '../schemas/transactionSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +45,7 @@ interface Props {
 export function AddDailyExpenseModal({ filter, onAdd }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const schema = useMemo(() => createDailyExpenseSchema(validationMessages(t)), [t])
   const {
     register,
     handleSubmit,
@@ -48,7 +53,7 @@ export function AddDailyExpenseModal({ filter, onAdd }: Props) {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<DailyExpenseFormValues>({
-    resolver: zodResolver(dailyExpenseSchema),
+    resolver: zodResolver(schema),
     defaultValues: { category: 'otros' },
   })
 

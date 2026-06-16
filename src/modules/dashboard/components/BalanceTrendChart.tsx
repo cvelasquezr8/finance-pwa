@@ -12,8 +12,8 @@ import {
   Legend,
 } from 'recharts'
 import { useBalanceTrend } from '../hooks/useBalanceTrend'
-import { formatCurrency } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const INCOME_COLOR = 'hsl(var(--primary))'
@@ -21,6 +21,7 @@ const EXPENSE_COLOR = 'hsl(var(--muted-foreground) / 0.4)'
 
 export function BalanceTrendChart({ className }: { className?: string }) {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
   const { data, isLoading } = useBalanceTrend(6)
 
   if (isLoading) {

@@ -16,6 +16,7 @@ export const API_ROUTES = {
   },
   users: {
     me: '/users/me',
+    deleteMe: '/users/me',
   },
   transactions: {
     list: '/transactions',
@@ -55,7 +56,12 @@ export const API_ROUTES = {
     items: (id: string) => `/events/${id}/items`,
     item: (eventId: string, itemId: string) => `/events/${eventId}/items/${itemId}`,
     cancel: (id: string) => `/events/${id}/cancel`,
+    close: (id: string) => `/events/${id}/close`,
+    reopen: (id: string) => `/events/${id}/reopen`,
     transactions: (id: string) => `/events/${id}/transactions`,
+  },
+  files: {
+    presign: '/files/presign',
   },
 } as const
 

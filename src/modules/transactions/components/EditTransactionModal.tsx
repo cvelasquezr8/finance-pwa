@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, CreditCard } from 'lucide-react'
@@ -26,9 +26,10 @@ import {
 } from '@/components/ui/dialog'
 import { CATEGORY_LABELS } from '@/lib/utils'
 import {
-  editTransactionSchema,
+  createEditTransactionSchema,
   type EditTransactionFormValues,
 } from '@/modules/transactions/schemas/transactionSchemas'
+import { validationMessages } from '@/i18n/validation'
 import type { TransactionResponseDTO, UpdateTransactionDTO, CardDTO } from '@/core/dtos'
 import type { QuincenaType } from '@/core/types'
 
@@ -46,6 +47,7 @@ export function EditTransactionModal({ transaction, cards, open, onOpenChange, o
   const { t } = useTranslation()
   const isScheduled = transaction?.type === 'scheduled'
   const creditCards = cards?.filter((c) => c.type === 'CREDIT') ?? []
+  const schema = useMemo(() => createEditTransactionSchema(validationMessages(t)), [t])
 
   const {
     register,
@@ -55,7 +57,7 @@ export function EditTransactionModal({ transaction, cards, open, onOpenChange, o
     reset,
     formState: { errors, isSubmitting },
   } = useForm<EditFormValues>({
-    resolver: zodResolver(editTransactionSchema),
+    resolver: zodResolver(schema),
   })
 
   const quincena = watch('quincena')

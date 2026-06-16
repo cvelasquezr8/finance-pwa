@@ -2,6 +2,23 @@
   "common": {
     "dialogForm": "Formulario del diálogo"
   },
+  "validation": {
+    "required": "Requerido",
+    "invalidEmail": "Correo inválido",
+    "minChars": "Mínimo {{n}} caracteres",
+    "maxChars": "Máximo {{n}} caracteres",
+    "positive": "Debe ser mayor a 0",
+    "notNegative": "No puede ser negativo",
+    "passwordMatch": "Las contraseñas no coinciden",
+    "aliasFormat": "Solo letras minúsculas, números y _ — debe empezar con @",
+    "selectCard": "Selecciona una tarjeta",
+    "minPercent": "Mínimo {{n}}%",
+    "maxPercent": "Máximo {{n}}%",
+    "exactFourDigits": "Debe ser exactamente 4 dígitos",
+    "passwordUppercase": "Al menos 1 letra mayúscula",
+    "passwordLowercase": "Al menos 1 letra minúscula",
+    "passwordNumber": "Al menos 1 número"
+  },
   "months": [
     "Enero",
     "Febrero",
@@ -84,6 +101,8 @@
     "signInLink": "Inicia sesión",
     "registerError": "Error al registrarse",
     "registerErrorDesc": "Intenta de nuevo",
+    "registerPendingTitle": "Cuenta creada",
+    "registerPendingDesc": "Un administrador revisará y aprobará tu acceso. Por favor inicia sesión cuando te lo confirmen.",
     "alias": "Alias *",
     "aliasHint": "Identificador único para invitaciones, ej. @juan_garcia"
   },
@@ -114,7 +133,16 @@
     "dark": "Oscuro",
     "light": "Claro",
     "alias": "Alias (no se puede cambiar)",
-    "emailReadOnly": "Correo electrónico (no se puede cambiar)"
+    "emailReadOnly": "Correo electrónico (no se puede cambiar)",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteAccountTitle": "¿Eliminar tu cuenta?",
+    "deleteAccountDesc": "Esta acción es permanente. Tus datos personales serán anonimizados y tu sesión se cerrará de inmediato. Las transacciones compartidas en eventos se conservarán.",
+    "deleteAccountConfirmLabel": "Escribe ELIMINAR para confirmar",
+    "deleteAccountConfirmPlaceholder": "ELIMINAR",
+    "deleteAccountCta": "Eliminar mi cuenta",
+    "deleteAccountDeleting": "Eliminando...",
+    "deleteAccountSuccess": "Cuenta eliminada",
+    "deleteAccountError": "No se pudo eliminar la cuenta"
   },
   "summary": {
     "currentBalance": "Saldo Actual",
@@ -435,7 +463,7 @@
     },
     "eventStatus": {
       "ACTIVE": "Activo",
-      "COMPLETED": "Completado",
+      "COMPLETED": "Cerrado",
       "CANCELLED": "Cancelado"
     },
     "shoppingList": "Lista de Compras",
@@ -467,6 +495,10 @@
     "columnUser": "Usuario",
     "columnDescription": "Descripción",
     "columnAmount": "Monto",
-    "unknownUser": "Desconocido"
+    "unknownUser": "Desconocido",
+    "closeEvent": "Cerrar evento",
+    "reopenEvent": "Reabrir evento",
+    "closeSuccess": "Evento cerrado",
+    "reopenSuccess": "Evento reabierto"
   }
 }

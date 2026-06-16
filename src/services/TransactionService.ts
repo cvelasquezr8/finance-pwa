@@ -41,14 +41,9 @@ class TransactionService extends BaseApiService {
   async create(dto: CreateTransactionDTO): Promise<TransactionResponseDTO> {
     const key = generateKey()
     if (useMock()) return mockTransactionService.create({ ...dto, idempotencyKey: key })
-    return this.post(
-      API_ROUTES.transactions.create,
-      {
-        ...dto,
-        status: dto.type === 'daily' ? 'confirmed' : 'pending',
-      },
-      { headers: { 'x-idempotency-key': key } }
-    )
+    return this.post(API_ROUTES.transactions.create, dto, {
+      headers: { 'x-idempotency-key': key },
+    })
   }
 
   async confirm(dto: ConfirmTransactionDTO): Promise<TransactionResponseDTO> {

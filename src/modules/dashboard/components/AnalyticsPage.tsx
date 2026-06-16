@@ -6,12 +6,12 @@ import { useTransactions } from '@/modules/transactions/hooks/useTransactions'
 import { useCards } from '@/modules/cards/hooks/useCards'
 import {
   cn,
-  formatCurrency,
   getQuincena,
   getQuincenaDateRangeLabel,
   CATEGORY_LABELS,
   CATEGORY_COLORS,
 } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import type { MonthFilter, QuincenaFilter } from '@/core/types'
 import { MonthFilter as MonthFilterComp } from '@/components/layout/MonthFilter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function AnalyticsPage() {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
   const now = new Date()
   const [filter, setFilter] = useState<MonthFilter & { quincena: QuincenaFilter }>({
     month: now.getMonth() + 1,

@@ -1,13 +1,16 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { TrendingUp, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { loginSchema, type LoginFormValues } from '../schemas/authSchemas'
+import { createLoginSchema, type LoginFormValues } from '../schemas/authSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/lib/toast'
@@ -19,12 +22,13 @@ interface Props {
 export function LoginForm({ onSwitchToRegister }: Props) {
   const { t } = useTranslation()
   const { login } = useAuth()
+  const schema = useMemo(() => createLoginSchema(validationMessages(t)), [t])
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
   })
 
   const onSubmit = async (data: LoginFormValues) => {
@@ -63,9 +67,8 @@ export function LoginForm({ onSwitchToRegister }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">{t('auth.password')}</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder={t('auth.passwordPlaceholder')}
                 {...register('password')}
               />

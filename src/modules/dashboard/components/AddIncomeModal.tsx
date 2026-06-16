@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { PlusCircle, Loader2 } from 'lucide-react'
@@ -17,7 +17,11 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { incomeSchema, type IncomeFormValues } from '@/modules/dashboard/schemas/dashboardSchemas'
+import {
+  createIncomeSchema,
+  type IncomeFormValues,
+} from '@/modules/dashboard/schemas/dashboardSchemas'
+import { validationMessages } from '@/i18n/validation'
 
 type FormValues = IncomeFormValues
 
@@ -28,13 +32,14 @@ interface Props {
 export function AddIncomeModal({ onAdd }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const schema = useMemo(() => createIncomeSchema(validationMessages(t)), [t])
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(incomeSchema),
+    resolver: zodResolver(schema),
   })
 
   const onSubmit = async (data: FormValues) => {

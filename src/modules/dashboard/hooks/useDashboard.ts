@@ -5,7 +5,7 @@ import { balanceService } from '@/services/TransactionService'
 import { toast } from '@/lib/toast'
 
 export function dashboardQueryKey(filter: MonthFilter & { quincena?: QuincenaFilter }) {
-  return ['dashboard', filter.month, filter.year, filter.quincena ?? 'mensual'] as const
+  return ['balance', 'summary', filter.month, filter.year, filter.quincena ?? 'mensual'] as const
 }
 
 export function useDashboard(filter: MonthFilter & { quincena?: QuincenaFilter }) {

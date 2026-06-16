@@ -1,20 +1,15 @@
 import { useTranslation } from 'react-i18next'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 
 interface Props {
   contributed: number
   goal: number
-  currency?: string
 }
 
-export function EventProgressBar({ contributed, goal, currency = 'MXN' }: Props) {
+export function EventProgressBar({ contributed, goal }: Props) {
   const { t } = useTranslation()
+  const fmt = useCurrency()
   const pct = goal > 0 ? Math.min(100, (contributed / goal) * 100) : 0
-  const fmt = (n: number) =>
-    new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(n)
 
   return (
     <div className="space-y-1.5">

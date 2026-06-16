@@ -1,11 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Loader2, CreditCard, Paperclip, X, PartyPopper } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { addTransactionSchema, type AddTransactionFormValues } from '../schemas/transactionSchemas'
+import {
+  createAddTransactionSchema,
+  type AddTransactionFormValues,
+} from '../schemas/transactionSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -67,6 +71,7 @@ export function AddTransactionModal({
   const setOpen = isControlled ? onOpenChange! : setInternalOpen
   const [mode, setMode] = useState<'income' | 'egreso'>('egreso')
   const [receipt, setReceipt] = useState<File | null>(null)
+  const schema = useMemo(() => createAddTransactionSchema(validationMessages(t)), [t])
   const fileRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -77,7 +82,7 @@ export function AddTransactionModal({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AddTransactionFormValues>({
-    resolver: zodResolver(addTransactionSchema),
+    resolver: zodResolver(schema),
     defaultValues: { mode: 'egreso', category: 'otros', cardId: null, eventId: null },
   })
 

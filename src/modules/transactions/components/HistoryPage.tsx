@@ -23,7 +23,8 @@ import {
   type SortOption,
 } from '@/components/ui/data-table'
 import { useDataTableState } from '@/lib/hooks/useDataTableState'
-import { formatCurrency, CATEGORY_LABELS } from '@/lib/utils'
+import { CATEGORY_LABELS } from '@/lib/utils'
+import { useCurrency } from '@/lib/hooks/useCurrency'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { UpdateTransactionDTO } from '@/core/dtos'
 
@@ -178,6 +179,7 @@ function MonthGroup({
   onDelete: (id: string) => Promise<void>
 }) {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
   const [open, setOpen] = useState(true)
   const total = group.totalScheduled + group.totalDaily
 
@@ -299,6 +301,7 @@ function defaultFilters(): HistoryFilters {
 
 export function HistoryPage() {
   const { t } = useTranslation()
+  const formatCurrency = useCurrency()
   const [filters, setFilters] = useState<HistoryFilters>(defaultFilters)
   const tableState = useDataTableState({
     defaultSortBy: 'date',

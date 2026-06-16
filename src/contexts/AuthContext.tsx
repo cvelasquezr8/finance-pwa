@@ -95,18 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     alias: string
   ) => {
-    const { user, token } = await authService.register({
-      firstName,
-      lastName,
-      email,
-      password,
-      confirmPassword: password,
-      alias,
-    })
-    i18n.changeLanguage(user.language ?? 'es')
-    applyTheme(user.theme)
-    localStorage.setItem('finance_user', JSON.stringify(user))
-    dispatch({ type: 'SET_USER', user, token })
+    await authService.register({ firstName, lastName, email, password, alias })
+    // Account starts as blocked — admin must approve before user can log in.
+    // No token is issued at registration time.
   }
 
   const logout = async () => {

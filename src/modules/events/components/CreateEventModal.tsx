@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, PartyPopper } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { createEventSchema, type CreateEventFormValues } from '../schemas/eventSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,6 +29,7 @@ interface Props {
 export function CreateEventModal({ open, onOpenChange, onCreate }: Props) {
   const { t } = useTranslation()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const schema = useMemo(() => createEventSchema(validationMessages(t)), [t])
 
   const {
     register,
@@ -35,7 +37,7 @@ export function CreateEventModal({ open, onOpenChange, onCreate }: Props) {
     reset,
     formState: { errors },
   } = useForm<CreateEventFormValues>({
-    resolver: zodResolver(createEventSchema),
+    resolver: zodResolver(schema),
   })
 
   const onSubmit = async (data: CreateEventFormValues) => {

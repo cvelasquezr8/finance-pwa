@@ -7,8 +7,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount)
+const CURRENCY_LOCALE: Record<string, string> = {
+  MXN: 'es-MX',
+  USD: 'en-US',
+  EUR: 'de-DE',
+  CAD: 'en-CA',
+  COP: 'es-CO',
+  ARS: 'es-AR',
+  CLP: 'es-CL',
+  PEN: 'es-PE',
+  BRL: 'pt-BR',
+}
+
+export function formatCurrency(amount: number, currency = 'MXN'): string {
+  const locale = CURRENCY_LOCALE[currency] ?? 'es-MX'
+  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount)
 }
 
 export function formatDate(iso: string): string {

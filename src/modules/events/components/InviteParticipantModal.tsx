@@ -1,11 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, UserPlus, AtSign } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { inviteParticipantSchema, type InviteParticipantFormValues } from '../schemas/eventSchemas'
+import {
+  createInviteParticipantSchema,
+  type InviteParticipantFormValues,
+} from '../schemas/eventSchemas'
+import { validationMessages } from '@/i18n/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,6 +35,7 @@ export function InviteParticipantModal({ open, onOpenChange, eventId, usedPct, o
   const { t } = useTranslation()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const remaining = Math.max(0, 100 - usedPct)
+  const schema = useMemo(() => createInviteParticipantSchema(validationMessages(t)), [t])
 
   const {
     register,
@@ -40,7 +45,7 @@ export function InviteParticipantModal({ open, onOpenChange, eventId, usedPct, o
     reset,
     formState: { errors },
   } = useForm<InviteParticipantFormValues>({
-    resolver: zodResolver(inviteParticipantSchema),
+    resolver: zodResolver(schema),
     defaultValues: { assignedPct: remaining },
   })
 

@@ -1,9 +1,12 @@
 import { z } from 'zod'
+import type { ValidationMessages } from '@/i18n/validation'
 
-export const incomeSchema = z.object({
-  description: z.string().min(2, 'Mínimo 2 caracteres'),
-  amount: z.coerce.number().positive('Debe ser mayor a 0'),
-})
+export function createIncomeSchema(msg: ValidationMessages) {
+  return z.object({
+    description: z.string().min(2, msg.minChars(2)),
+    amount: z.coerce.number().positive(msg.positive()),
+  })
+}
 
 export const profileSchema = z.object({
   firstName: z.string().min(2),
@@ -18,5 +21,5 @@ export const profileSchema = z.object({
   theme: z.enum(['dark', 'light']),
 })
 
-export type IncomeFormValues = z.infer<typeof incomeSchema>
+export type IncomeFormValues = { description: string; amount: number }
 export type ProfileFormValues = z.infer<typeof profileSchema>
