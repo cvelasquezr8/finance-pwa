@@ -25,6 +25,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -110,6 +111,7 @@ export function AddScheduledExpenseModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('addScheduled.title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">

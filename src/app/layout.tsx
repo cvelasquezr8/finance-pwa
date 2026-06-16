@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import { Providers } from '@/components/Providers'
 
@@ -13,6 +14,11 @@ export const metadata: Metadata = {
   title: 'Finance Manager',
   description: 'Personal finance management with bi-weekly budgeting',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/icons/icon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -28,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning className={inter.variable}>
+    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${GeistMono.variable}`}>
       <head>
         {/*
           dangerouslySetInnerHTML is safe here: __html is a hardcoded

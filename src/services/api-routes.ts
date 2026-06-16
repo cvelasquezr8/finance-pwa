@@ -12,6 +12,10 @@ export const API_ROUTES = {
     register: '/auth/register',
     logout: '/auth/logout',
     refresh: '/auth/refresh',
+    changePassword: '/auth/change-password',
+  },
+  users: {
+    me: '/users/me',
   },
   transactions: {
     list: '/transactions',
@@ -33,8 +37,15 @@ export const API_ROUTES = {
   },
   admin: {
     users: '/admin/users',
+    invite: '/admin/users/invite',
     userRole: (userId: string) => `/admin/users/${userId}/role`,
     userStatus: (userId: string) => `/admin/users/${userId}/status`,
+  },
+  notifications: {
+    list: '/notifications',
+    read: (id: string) => `/notifications/${id}/read`,
+    readAll: '/notifications/read-all',
+    byId: (id: string) => `/notifications/${id}`,
   },
   events: {
     list: '/events',

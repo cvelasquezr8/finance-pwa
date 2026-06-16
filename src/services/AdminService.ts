@@ -4,6 +4,7 @@ import { useMock } from './api-config'
 import { API_ROUTES } from './api-routes'
 import type {
   AdminUserDTO,
+  InviteUserDTO,
   PaginatedResponseDTO,
   PaginationQueryDTO,
   UpdateUserRoleDTO,
@@ -13,6 +14,11 @@ class AdminService extends BaseApiService {
   async listUsers(query: PaginationQueryDTO = {}): Promise<PaginatedResponseDTO<AdminUserDTO>> {
     if (useMock()) return mockAdminService.listUsers(query)
     return this.get(API_ROUTES.admin.users, { params: query })
+  }
+
+  async inviteUser(dto: InviteUserDTO): Promise<AdminUserDTO> {
+    if (useMock()) return mockAdminService.inviteUser(dto)
+    return this.post(API_ROUTES.admin.invite, dto)
   }
 
   async updateRole(dto: UpdateUserRoleDTO): Promise<AdminUserDTO> {

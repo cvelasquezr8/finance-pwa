@@ -1,16 +1,10 @@
 import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { eventService } from '@/services/EventService'
+import { notificationService, type AppNotification } from '@/services/NotificationService'
 
-export interface AppNotification {
-  id: string
-  type: 'event_invitation'
-  eventId: string
-  eventTitle: string
-  assignedPct: number
-  joinedAt: string
-  read: boolean
-}
+export type { AppNotification }
+
+const POLL_INTERVAL_MS = 45_000
 
 interface NotificationState {
   notifications: AppNotification[]
@@ -68,25 +62,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const refresh = useCallback(async () => {
     if (!user) return
     try {
-      const events = await eventService.listEvents(user.id)
-      const pending: AppNotification[] = []
-      for (const event of events) {
-        const participant = event.participants.find(
-          (p) => p.userId === user.id && p.status === 'PENDING_CONFIRMATION'
-        )
-        if (participant) {
-          pending.push({
-            id: `notif_${event.id}`,
-            type: 'event_invitation',
-            eventId: event.id,
-            eventTitle: event.title,
-            assignedPct: participant.assignedPct,
-            joinedAt: participant.joinedAt,
-            read: false,
-          })
-        }
-      }
-      dispatch({ type: 'SET_NOTIFICATIONS', notifications: pending })
+      const { notifications } = await notificationService.list(user.id)
+      dispatch({ type: 'SET_NOTIFICATIONS', notifications })
     } catch {
       // silent
     }
@@ -96,12 +73,25 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     refresh()
     const handler = () => refresh()
     window.addEventListener('financeDataChanged', handler)
-    return () => window.removeEventListener('financeDataChanged', handler)
+    const timer = setInterval(refresh, POLL_INTERVAL_MS)
+    return () => {
+      window.removeEventListener('financeDataChanged', handler)
+      clearInterval(timer)
+    }
   }, [refresh])
 
-  const markAsRead = (id: string) => dispatch({ type: 'MARK_READ', id })
-  const markAllAsRead = () => dispatch({ type: 'MARK_ALL_READ' })
-  const dismiss = (id: string) => dispatch({ type: 'DISMISS', id })
+  const markAsRead = (id: string) => {
+    dispatch({ type: 'MARK_READ', id })
+    void notificationService.markRead(id)
+  }
+  const markAllAsRead = () => {
+    dispatch({ type: 'MARK_ALL_READ' })
+    void notificationService.markAllRead()
+  }
+  const dismiss = (id: string) => {
+    dispatch({ type: 'DISMISS', id })
+    void notificationService.dismiss(id)
+  }
 
   const unreadCount = state.notifications.filter((n) => !n.read).length
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const categoryEnum = z.enum([
+export const categoryEnum = z.enum([
   'vivienda',
   'servicios',
   'alimentacion',
@@ -12,22 +12,45 @@ const categoryEnum = z.enum([
   'otros',
 ])
 
-export const dailyExpenseSchema = z.object({
-  description: z.string().min(2, 'Mínimo 2 caracteres'),
-  amount: z.coerce.number().positive('Debe ser mayor a 0'),
-  category: categoryEnum,
-  isCC: z.boolean().default(false),
-  cardId: z.string().nullable().optional(),
-})
+// A credit-card expense must reference the card it was charged to.
+const cardRefinement = {
+  message: 'Selecciona una tarjeta',
+  path: ['cardId'],
+}
 
-export const scheduledExpenseSchema = z.object({
+export const dailyExpenseSchema = z
+  .object({
+    description: z.string().min(2, 'Mínimo 2 caracteres'),
+    amount: z.coerce.number().positive('Debe ser mayor a 0'),
+    category: categoryEnum,
+    isCC: z.boolean().default(false),
+    cardId: z.string().nullable().optional(),
+  })
+  .refine((data) => !data.isCC || !!data.cardId, cardRefinement)
+
+export const scheduledExpenseSchema = z
+  .object({
+    description: z.string().min(2, 'Mínimo 2 caracteres'),
+    amount: z.coerce.number().positive('Debe ser mayor a 0'),
+    category: categoryEnum,
+    dueDay: z.coerce.number().min(1).max(31),
+    quincena: z.enum(['primera', 'segunda']),
+    isRecurring: z.boolean(),
+    isCC: z.boolean().default(false),
+    cardId: z.string().nullable().optional(),
+  })
+  .refine((data) => !data.isCC || !!data.cardId, cardRefinement)
+
+// Edit form: superset of daily + scheduled fields, all conditionally optional
+// (the modal shows/hides fields based on the transaction type being edited).
+export const editTransactionSchema = z.object({
   description: z.string().min(2, 'Mínimo 2 caracteres'),
   amount: z.coerce.number().positive('Debe ser mayor a 0'),
   category: categoryEnum,
-  dueDay: z.coerce.number().min(1).max(31),
-  quincena: z.enum(['primera', 'segunda']),
-  isRecurring: z.boolean(),
-  isCC: z.boolean().default(false),
+  dueDay: z.coerce.number().min(1).max(31).optional(),
+  quincena: z.enum(['primera', 'segunda']).optional(),
+  isRecurring: z.boolean().optional(),
+  isCC: z.boolean().optional(),
   cardId: z.string().nullable().optional(),
 })
 
@@ -48,5 +71,6 @@ export const adjustBalanceSchema = z.object({
 
 export type DailyExpenseFormValues = z.infer<typeof dailyExpenseSchema>
 export type ScheduledExpenseFormValues = z.infer<typeof scheduledExpenseSchema>
+export type EditTransactionFormValues = z.infer<typeof editTransactionSchema>
 export type AdjustBalanceFormValues = z.infer<typeof adjustBalanceSchema>
 export type AddTransactionFormValues = z.infer<typeof addTransactionSchema>

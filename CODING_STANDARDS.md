@@ -20,7 +20,7 @@
 11. [Services Architecture](#11-services-architecture)
 12. [Business Domain Rules](#12-business-domain-rules)
 13. [i18n Rules](#13-i18n-rules)
-14. [Migration Note (Vite → Next.js)](#14-migration-note-vite--nextjs)
+14. [Framework: Next.js App Router](#14-framework-nextjs-app-router)
 15. [Configuration Files Reference](#15-configuration-files-reference)
 
 ---
@@ -68,7 +68,7 @@ Grouping by feature (not by type) means all code for a feature lives together. D
 
 ## 2. Path Aliases
 
-The `@` alias is configured in both `tsconfig.json` and `vite.config.ts` and resolves to `./src`.
+The `@` alias is configured in `tsconfig.json` (`paths`) and mirrored in `vitest.config.ts` for tests. It resolves to `./src`.
 
 | Alias          | Resolves to       |
 | -------------- | ----------------- |
@@ -82,7 +82,7 @@ The `@` alias is configured in both `tsconfig.json` and `vite.config.ts` and res
 
 **Rule:** Always use `@/` aliases for internal imports. Never use deep relative paths like `../../../lib/utils`.
 
-> **Migration Note:** The `lib/` folder at the **project root** (not `src/lib/`) is the target for the Next.js App Router migration. It is intentionally outside `src/` and is NOT reachable via `@/`. Do not import from it in Vite source files.
+> **Note:** A legacy `lib/` folder may exist at the **project root** (not `src/lib/`) left over from the migration. It is outside `src/` and NOT reachable via `@/`. All current code lives under `src/`; use `@/lib/*` (i.e. `src/lib/`), never the root `lib/`.
 
 ---
 
@@ -90,7 +90,11 @@ The `@` alias is configured in both `tsconfig.json` and `vite.config.ts` and res
 
 | Entity              | Convention                | Example                                    |
 | ------------------- | ------------------------- | ------------------------------------------ |
-| Files               | kebab-case                | `mobile-header.tsx`, `use-transactions.ts` |
+| Component files     | PascalCase (match export) | `MobileHeader.tsx`, `TransactionTable.tsx` |
+| Hook files          | camelCase (match export)  | `useTransactions.ts`, `useDashboard.ts`    |
+| Service files       | PascalCase (match export) | `TransactionService.ts`                    |
+| Schema files        | camelCase (match export)  | `transactionSchemas.ts`, `authSchemas.ts`  |
+| Plain util / config | kebab-case / lowercase    | `api-config.ts`, `utils.ts`, `idempotency.ts` |
 | Components          | PascalCase                | `MobileHeader`, `TransactionTable`         |
 | Hooks               | `use` + PascalCase        | `useTransactions`, `useDashboard`          |
 | Services            | PascalCase + `Service`    | `TransactionService`                       |
@@ -203,13 +207,13 @@ All layout decisions start at mobile and expand upward with `md:` and `lg:` brea
 | Use CSS variable tokens, not raw colors | `bg-primary`, `text-muted-foreground` etc. inherit the active theme automatically. Hardcoded values break in dark mode.                                                        |
 | Semantic color exceptions               | `text-emerald-600` for income and `text-red-600` for expenses are acceptable — they carry domain meaning that shouldn't be abstracted away                                     |
 | Amber CC badge                          | `isCC` transactions always render an amber "TC" badge: `bg-amber-500/20 text-amber-600 dark:text-amber-400`                                                                    |
-| Font classes                            | Body text: `font-sans` (Inter). Numbers / amounts: `font-heading` (Geist Mono). Headings inherit Geist Mono via the global `h1–h6` rule in `src/index.css`.                    |
+| Font classes                            | Body text: `font-sans` (Inter). Numbers / amounts: `font-heading` (Geist Mono). Headings inherit Geist Mono via the global `h1–h6` rule in `src/app/globals.css`.                    |
 
 ---
 
 ## 7. Taupe & Amber Theme Reference
 
-Theme is defined in `src/index.css`. All values are HSL tuples consumed via `hsl(var(--token))` in `tailwind.config.js`.
+Theme is defined in `src/app/globals.css`. All values are HSL tuples consumed via `hsl(var(--token))` in `tailwind.config.js`.
 
 ### Core tokens
 
@@ -396,37 +400,34 @@ const rangeLabel = getQuincenaDateRangeLabel(filter.quincena, filter.month, filt
 
 ---
 
-## 14. Migration Note (Vite → Next.js)
+## 14. Framework: Next.js App Router
 
-This project is being migrated to **Next.js App Router**. The migration follows these steps:
+This project **completed** its migration from Vite to **Next.js (App Router)**. All
+application code lives under `src/` and the framework is Next.js 15.
 
-| Step                       | Status  | Location                          |
-| -------------------------- | ------- | --------------------------------- |
-| 1. Port domain types       | ✅ Done | `lib/types/` (project root)       |
-| 2. Port Zod schemas        | ✅ Done | `lib/schemas/` (project root)     |
-| 3. Port service layer      | Pending | `lib/services/`                   |
-| 4. Build Server Components | Pending | `app/transactions/`               |
-| 5. Port Client Components  | Pending | `components/shared/transactions/` |
-
-**During migration:**
-
-- The `lib/` folder at the **project root** is the Next.js target. It is outside `src/` and not accessible via `@/` in Vite code.
-- Do not import from root `lib/` in any `src/` file.
-- Vite source files continue to use `src/core/types` and `src/lib/utils`.
+- **Routing:** `src/app/` with route groups `(auth)` (public) and `(protected)`
+  (auth-guarded via the `(protected)/layout.tsx` client guard).
+- **Components:** the app is **client-first** by design — most pages and feature
+  components are `'use client'` because of heavy interactivity (forms, charts, tables,
+  TanStack Query). Keep a component as a Server Component only when it has no
+  interactivity/state. Do not add `'use client'` to a component that doesn't need it.
+- **Domain code:** `src/core/types` (entities) and `src/lib/utils` (helpers). A legacy
+  root-level `lib/` may linger from the migration — ignore it; never import from it.
 
 ---
 
 ## 15. Configuration Files Reference
 
-| File                 | Purpose                   | Key settings                                                                   |
-| -------------------- | ------------------------- | ------------------------------------------------------------------------------ |
-| `tailwind.config.js` | Tailwind theme extension  | `fontFamily: { sans: Inter, heading: Geist Mono }`, CSS variable color tokens  |
-| `tsconfig.json`      | TypeScript compiler       | `strict: true`, `noUnusedLocals: true`, `@/*` → `./src/*`                      |
-| `vite.config.ts`     | Vite build + PWA          | `@` alias → `./src`, PWA manifest with Taupe theme color `#1c1917`             |
-| `components.json`    | Shadcn CLI config         | `baseColor: stone`, `cssVariables: true`, `utils: @/lib/utils`                 |
-| `src/index.css`      | Global styles + theme     | Taupe & Amber HSL variables, Geist Mono + Inter font imports, scrollbar styles |
-| `CLAUDE.md`          | AI assistant instructions | Business rules, architecture decisions, non-negotiable constraints             |
+| File                  | Purpose                   | Key settings                                                                   |
+| --------------------- | ------------------------- | ------------------------------------------------------------------------------ |
+| `next.config.ts`      | Next.js + PWA build       | `reactStrictMode`, `@ducanh2912/next-pwa` (`dest: public`, NetworkFirst API cache, disabled in dev) |
+| `tailwind.config.js`  | Tailwind theme extension  | `fontFamily` via `var(--font-sans)` / `var(--font-geist-mono)`, CSS variable color tokens |
+| `tsconfig.json`       | TypeScript compiler       | `strict: true`, `jsx: preserve`, `next` plugin, `@/*` → `./src/*`              |
+| `components.json`     | Shadcn CLI config         | `baseColor: stone`, `cssVariables: true`, `utils: @/lib/utils`                 |
+| `src/app/globals.css` | Global styles + theme     | Taupe & Amber HSL variables, `--font-*` tokens, Tailwind layers                |
+| `src/app/layout.tsx`  | Root layout               | `next/font` (Inter + Geist Mono), metadata, manifest, anti-FOUC theme script   |
+| `CLAUDE.md`           | AI assistant instructions | Business rules, architecture decisions, non-negotiable constraints             |
 
 ---
 
-_Last updated: 2026-05-06. Maintained alongside `CLAUDE.md` as the project source of truth._
+_Last updated: 2026-06-15. Maintained alongside `CLAUDE.md` as the project source of truth._

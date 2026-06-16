@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { PlusCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -12,18 +11,15 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { incomeSchema, type IncomeFormValues } from '@/modules/dashboard/schemas/dashboardSchemas'
 
-const schema = z.object({
-  description: z.string().min(2),
-  amount: z.coerce.number().positive(),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = IncomeFormValues
 
 interface Props {
   onAdd: (description: string, amount: number) => Promise<void>
@@ -38,7 +34,7 @@ export function AddIncomeModal({ onAdd }: Props) {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(incomeSchema),
   })
 
   const onSubmit = async (data: FormValues) => {
@@ -62,6 +58,7 @@ export function AddIncomeModal({ onAdd }: Props) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('addIncome.title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">

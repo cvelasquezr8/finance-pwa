@@ -117,9 +117,10 @@
     --sidebar-ring: 38 92% 50%;
   }
 
-  .theme {
-    --font-heading: 'Geist Mono', monospace;
-    --font-sans: 'Inter Variable', 'Inter', sans-serif;
+  :root {
+    /* --font-sans / --font-geist-mono are injected by next/font on <html>.
+       Fallbacks keep things sane if the font fails to load. */
+    --font-heading: var(--font-geist-mono), ui-monospace, 'SFMono-Regular', monospace;
   }
 
   * {

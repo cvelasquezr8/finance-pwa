@@ -117,7 +117,7 @@ function MobileTransactionRow({
           <p className="truncate text-sm font-medium">{tx.description}</p>
           {tx.isRecurring && (
             <span
-              className="flex-shrink-0 text-[10px] text-muted-foreground"
+              className="flex-shrink-0 text-2xs text-muted-foreground"
               title={t('transactions.recurring', { day: tx.dueDay })}
             >
               ↻
@@ -139,14 +139,14 @@ function MobileTransactionRow({
           {tx.isCC &&
             (card ? (
               <span
-                className="flex items-center gap-0.5 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-600 dark:text-amber-400"
+                className="flex items-center gap-0.5 rounded bg-amber-500/20 px-1.5 py-0.5 text-2xs font-bold leading-none text-amber-600 dark:text-amber-400"
                 title={t('transactions.ccTooltip')}
               >
                 <CreditCard className="h-2.5 w-2.5" />
                 {card.name} ···{card.lastFour}
               </span>
             ) : (
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-600 dark:text-amber-400">
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-2xs font-bold leading-none text-amber-600 dark:text-amber-400">
                 TC
               </span>
             ))}
@@ -162,7 +162,7 @@ function MobileTransactionRow({
             {formatCurrency(tx.amount)}
           </span>
         </div>
-        <Badge variant={statusVariant} className="h-4 px-1.5 py-0 text-[10px]">
+        <Badge variant={statusVariant} className="h-4 px-1.5 py-0 text-2xs">
           {statusLabel}
         </Badge>
       </div>
@@ -395,7 +395,7 @@ export function TransactionTable({
                           const card = tx.cardId ? cardMap.get(tx.cardId) : undefined
                           return card ? (
                             <span
-                              className="inline-flex max-w-full items-center gap-1 truncate rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400"
+                              className="inline-flex max-w-full items-center gap-1 truncate rounded bg-amber-500/20 px-1.5 py-0.5 text-2xs font-bold text-amber-600 dark:text-amber-400"
                               title={`${card.name} ···${card.lastFour}`}
                             >
                               <CreditCard className="h-2.5 w-2.5 shrink-0" />

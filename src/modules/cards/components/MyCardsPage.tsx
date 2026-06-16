@@ -20,6 +20,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -79,6 +80,7 @@ function EditCardModal({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{t('cards.editCard')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
@@ -168,7 +170,7 @@ function CardTile({
       >
         <div className="flex items-start justify-between">
           <CreditCard className="h-6 w-6 opacity-80" />
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider">
             {isCredit ? t('cards.credit') : t('cards.debit')}
           </span>
         </div>
@@ -179,12 +181,12 @@ function CardTile({
 
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-60">{t('cards.cardName')}</p>
+            <p className="text-2xs uppercase tracking-wide opacity-60">{t('cards.cardName')}</p>
             <p className="text-sm font-semibold">{card.name}</p>
           </div>
           {card.expiryDate && (
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide opacity-60">{t('cards.expires')}</p>
+              <p className="text-2xs uppercase tracking-wide opacity-60">{t('cards.expires')}</p>
               {/* Slash preserved as-is — do not sanitize */}
               <p className="font-mono text-sm">{card.expiryDate}</p>
             </div>

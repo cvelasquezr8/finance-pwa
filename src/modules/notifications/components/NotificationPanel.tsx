@@ -11,9 +11,11 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
   const router = useRouter()
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismiss } = useNotifications()
 
-  const handleItemClick = (id: string, eventId: string) => {
+  const handleItemClick = (id: string, type: string, relatedId: string | null) => {
     markAsRead(id)
-    router.push(`/events/${eventId}`)
+    if (relatedId && (type === 'event_invitation' || type === 'invitation_response')) {
+      router.push(`/events/${relatedId}`)
+    }
     onClose?.()
   }
 
@@ -50,14 +52,10 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
             >
               <button
                 className="min-w-0 flex-1 text-left"
-                onClick={() => handleItemClick(n.id, n.eventId)}
+                onClick={() => handleItemClick(n.id, n.type, n.relatedId)}
               >
-                <p className="truncate text-sm font-medium">
-                  {t('notifications.eventInvitation', { title: n.eventTitle })}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t('notifications.assignedPct', { pct: n.assignedPct })}
-                </p>
+                <p className="truncate text-sm font-medium">{n.title}</p>
+                {n.message && <p className="text-xs text-muted-foreground">{n.message}</p>}
               </button>
               <button
                 onClick={() => dismiss(n.id)}

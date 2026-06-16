@@ -49,6 +49,7 @@ export interface AuthResponseDTO {
     role: UserRole
     status: UserStatus
     alias: string
+    mustChangePassword?: boolean
     createdAt: string
   }
 }
@@ -189,6 +190,38 @@ export interface UpdateUserRoleDTO {
 export interface UpdateUserStatusDTO {
   userId: string
   status: UserStatus
+}
+
+export interface InviteUserDTO {
+  email: string
+  firstName: string
+  lastName: string
+  alias: string
+  role?: UserRole
+}
+
+// --- Notification DTOs ---
+
+export type NotificationType =
+  | 'event_invitation'
+  | 'invitation_response'
+  | 'account_invited'
+  | 'account_blocked'
+  | 'monthly_summary'
+
+export interface NotificationDTO {
+  id: string
+  type: NotificationType
+  title: string
+  message: string | null
+  relatedId: string | null
+  read: boolean
+  createdAt: string
+}
+
+export interface NotificationListDTO {
+  data: NotificationDTO[]
+  unreadCount: number
 }
 
 // --- Event DTOs ---

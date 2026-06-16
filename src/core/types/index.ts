@@ -87,6 +87,7 @@ export interface User {
   role: UserRole
   status: UserStatus
   alias: string
+  mustChangePassword?: boolean
   createdAt: string
 }
 

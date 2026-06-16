@@ -1,4 +1,7 @@
 {
+  "common": {
+    "dialogForm": "Formulario del diálogo"
+  },
   "months": [
     "Enero",
     "Febrero",
@@ -45,6 +48,15 @@
     "logout": "Cerrar sesión"
   },
   "auth": {
+    "actionRequired": "Acción requerida",
+    "changePasswordTitle": "Cambia tu contraseña",
+    "changePasswordSubtitle": "Tu cuenta se creó con una contraseña temporal. Defínela antes de continuar.",
+    "currentPassword": "Contraseña temporal",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "changePasswordCta": "Guardar contraseña",
+    "passwordChanged": "Contraseña actualizada",
+    "passwordChangeError": "No se pudo cambiar la contraseña",
     "loginTitle": "Finance Manager",
     "loginSubtitle": "Inicia sesión para continuar",
     "email": "Correo electrónico",
@@ -310,6 +322,12 @@
     "navLabel": "Admin Panel",
     "title": "Panel de Administración",
     "subtitle": "Gestiona los usuarios y sus permisos",
+    "invite": "Invitar",
+    "inviteTitle": "Invitar usuario",
+    "inviteSubtitle": "Se creará la cuenta y se enviará una contraseña temporal por correo.",
+    "inviteCta": "Enviar invitación",
+    "inviteSent": "Invitación enviada",
+    "inviteError": "No se pudo invitar al usuario",
     "refresh": "Actualizar",
     "totalUsers": "Total usuarios",
     "admins": "Admins",

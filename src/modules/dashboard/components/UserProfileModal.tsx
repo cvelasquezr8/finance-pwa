@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { Camera, Loader2, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
@@ -21,12 +20,14 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from '@/lib/toast'
+import { profileSchema, type ProfileFormValues } from '@/modules/dashboard/schemas/dashboardSchemas'
 
 const CURRENCIES = ['MXN', 'USD', 'EUR', 'CAD', 'COP', 'ARS', 'CLP', 'PEN', 'BRL']
 const TIMEZONES = [
@@ -42,21 +43,6 @@ const TIMEZONES = [
   'America/Buenos_Aires',
   'Europe/Madrid',
 ]
-
-const profileSchema = z.object({
-  firstName: z.string().min(2),
-  lastName: z.string().min(2),
-  middleName: z.string().optional(),
-  secondLastName: z.string().optional(),
-  phone: z.string().optional(),
-  currency: z.string().min(1),
-  timezone: z.string().min(1),
-  monthlyNotifications: z.boolean(),
-  language: z.enum(['es', 'en']),
-  theme: z.enum(['dark', 'light']),
-})
-
-type ProfileFormValues = z.infer<typeof profileSchema>
 
 interface Props {
   trigger?: React.ReactNode
@@ -126,8 +112,7 @@ export function UserProfileModal({ trigger, open: controlledOpen, onOpenChange }
   }
 
   const onSubmit = async (data: ProfileFormValues) => {
-    await new Promise((r) => setTimeout(r, 400))
-    updateUser({
+    await updateUser({
       firstName: data.firstName,
       lastName: data.lastName,
       middleName: data.middleName,
@@ -175,6 +160,7 @@ export function UserProfileModal({ trigger, open: controlledOpen, onOpenChange }
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('profile.title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

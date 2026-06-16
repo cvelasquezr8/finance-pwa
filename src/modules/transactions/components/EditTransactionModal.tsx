@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, CreditCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,36 +19,20 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { CATEGORY_LABELS } from '@/lib/utils'
+import {
+  editTransactionSchema,
+  type EditTransactionFormValues,
+} from '@/modules/transactions/schemas/transactionSchemas'
 import type { TransactionResponseDTO, UpdateTransactionDTO, CardDTO } from '@/core/dtos'
 import type { QuincenaType } from '@/core/types'
 
-const editSchema = z.object({
-  description: z.string().min(2),
-  amount: z.coerce.number().positive(),
-  category: z.enum([
-    'vivienda',
-    'servicios',
-    'alimentacion',
-    'transporte',
-    'salud',
-    'entretenimiento',
-    'educacion',
-    'deuda',
-    'otros',
-  ]),
-  dueDay: z.coerce.number().min(1).max(31).optional(),
-  quincena: z.enum(['primera', 'segunda']).optional(),
-  isRecurring: z.boolean().optional(),
-  isCC: z.boolean().optional(),
-  cardId: z.string().nullable().optional(),
-})
-
-type EditFormValues = z.infer<typeof editSchema>
+type EditFormValues = EditTransactionFormValues
 
 interface Props {
   transaction: TransactionResponseDTO | null
@@ -72,7 +55,7 @@ export function EditTransactionModal({ transaction, cards, open, onOpenChange, o
     reset,
     formState: { errors, isSubmitting },
   } = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
+    resolver: zodResolver(editTransactionSchema),
   })
 
   const quincena = watch('quincena')
@@ -107,6 +90,7 @@ export function EditTransactionModal({ transaction, cards, open, onOpenChange, o
           <DialogTitle>
             {isScheduled ? t('editTransaction.titleScheduled') : t('editTransaction.titleDaily')}
           </DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

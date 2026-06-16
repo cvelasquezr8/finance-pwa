@@ -14,7 +14,7 @@ class AuthService extends BaseApiService {
     if (res.user.status === 'blocked')
       throw new Error('Tu cuenta ha sido bloqueada. Contacta al administrador.')
     if (res.user.status === 'deleted') throw new Error('Esta cuenta ya no existe.')
-    setStoredToken(res.token, res.refreshToken)
+    setStoredToken(res.token)
     return { user: res.user, token: res.token }
   }
 
@@ -29,7 +29,7 @@ class AuthService extends BaseApiService {
         )
       : await this.post<AuthResponseDTO, RegisterRequestDTO>(API_ROUTES.auth.register, dto)
 
-    setStoredToken(res.token, res.refreshToken)
+    setStoredToken(res.token)
     return { user: res.user, token: res.token }
   }
 
@@ -40,6 +40,20 @@ class AuthService extends BaseApiService {
       await this.post(API_ROUTES.auth.logout, {})
     }
     clearStoredTokens()
+  }
+
+  /**
+   * Persists profile changes. In mock mode there is no server session, so it
+   * returns null and the caller keeps the optimistic local merge.
+   */
+  async updateProfile(updates: Partial<User>): Promise<User | null> {
+    if (useMock()) return null
+    return this.patch<User, Partial<User>>(API_ROUTES.users.me, updates)
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    if (useMock()) return
+    await this.post(API_ROUTES.auth.changePassword, { currentPassword, newPassword })
   }
 }
 

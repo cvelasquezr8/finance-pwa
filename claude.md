@@ -5,9 +5,9 @@
 Personal Finance PWA for tracking transactions, budgets, and cash flow.
 
 - **Core Concept:** Everything is a `Transaction`. Differentiate between `INCOME` and `EXPENSE`. Never use "Expense" as a generic term.
-- **Credit Card Logic:** CC transactions represent projected debt. They must not decrease the immediate "Cash Balance" until the statement payment is processed.
-- **Sanitization Rule:** Strictly **DO NOT** remove or sanitize slashes (`/`) from credit card expiration date inputs.
-- **Current Task:** Modernizing and migrating logic from the original Vite implementation to Next.js (App Router).
+- **Credit Card Logic:** CC transactions (`isCC: true`) represent projected debt. They must not decrease the immediate "Cash Balance" until the statement payment is processed.
+- **Sanitization Rule (future feature):** When a credit-card **expiration date** input is added, strictly **DO NOT** remove or sanitize slashes (`/`) from it. ⚠️ No `expiryDate` input exists yet — the `CardDTO.expiryDate` field is display-only; this rule applies the moment the input is built.
+- **Status:** The Vite → Next.js (App Router) migration is **complete**; current focus is hardening, PWA polish, and feature work.
 
 ## 2. Tech Stack
 
@@ -18,23 +18,24 @@ Personal Finance PWA for tracking transactions, budgets, and cash flow.
 
 ## 3. Architecture & Patterns (DDD)
 
-- **Domain:** Pure business logic and types (Transaction, Account, User).
+- **Domain:** Pure business logic and types in `@/core/types` and `@/core/dtos`.
 - **Presentation:**
   - `@/components/ui`: Shadcn/UI primitives.
-  - `@/components/shared`: Feature-specific components.
+  - `@/components/layout`: App shell (Sidebar, BottomBar, filters).
+  - `@/modules/<feature>/{components,hooks,schemas}`: feature slices (the project groups by feature, not by a single `shared` folder).
 - **Hooks:** Encapsulate business logic and data fetching into custom hooks.
-- **Server vs Client:** Maximize Server Components. Use `'use client'` only for interactive elements.
+- **Server vs Client (client-first):** The app is intentionally client-first — most pages and feature components are `'use client'` due to heavy interactivity (forms, charts, tables, TanStack Query). Keep a component server-side **only** when it has no interactivity/state; never add `'use client'` to something that doesn't need it.
 
 ## 4. Specialized Agent Personas (Shadcn/Tailwind Context)
 
 - **Shadcn Expert:** You have deep knowledge of `@/lib/utils.ts` and the `cn()` helper. Always prefer extending existing Shadcn components over creating new ones.
 - **Tailwind Strategist:** Focus on responsive design (mobile-first). Use arbitrary values `[]` only when strictly necessary; prefer the standard design system.
-- **Next.js Architect:** Expert in the distinction between Server and Client components. You must ensure that heavy logic stays in Server Components to keep the PWA fast.
+- **Next.js Architect:** Expert in the distinction between Server and Client components. Given this app is client-first, focus on keeping client bundles lean (code-split modals/charts, avoid pulling heavy deps into shared chunks) rather than forcing Server Components where interactivity is required.
 - **Zod & Type Auditor:** Ensure that every form in the PWA is backed by a Zod schema that matches our `Transaction` domain.
 
 ## 5. Development Rules
 
-- **Naming:** camelCase for variables/functions, PascalCase for components/classes, kebab-case for file names.
+- **Naming:** camelCase for variables/functions, PascalCase for components/classes. **File names match their primary export:** PascalCase for component files (`TransactionTable.tsx`), camelCase for hook/schema files (`useTransactions.ts`, `authSchemas.ts`), kebab-case/lowercase for plain util/config modules (`api-config.ts`, `utils.ts`). See `CODING_STANDARDS.md` §3.
 - **Style:** No custom CSS. Use Tailwind utility classes for everything.
 - **Integrity:** Every transaction input must be validated via Zod.
 

@@ -291,7 +291,7 @@ export function EventDetailPage() {
                     <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
                       {fmt(tx.amount)}
                     </p>
-                    <span className="mt-0.5 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                    <span className="mt-0.5 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-700 dark:text-amber-400">
                       {tx.userId
                         ? (participantAliases[tx.userId] ?? tx.userId)
                         : t('events.unknownUser')}

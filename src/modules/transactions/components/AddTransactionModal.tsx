@@ -21,6 +21,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -144,6 +145,7 @@ export function AddTransactionModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('addTransaction.title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex w-fit rounded-lg border border-border p-0.5">

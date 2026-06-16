@@ -9,6 +9,7 @@ import type {
   AdminUserDTO,
   UpdateUserRoleDTO,
   UpdateUserStatusDTO,
+  InviteUserDTO,
   CardDTO,
   CreateCardDTO,
   BudgetEventDTO,
@@ -590,15 +591,24 @@ function computeBalance(filter: MonthFilter & { quincena?: QuincenaFilter }): Ba
   const totalPending = pending.reduce((s, t) => s + t.amount, 0)
   const totalConfirmed = confirmed.reduce((s, t) => s + t.amount, 0)
   const totalDaily = daily.reduce((s, t) => s + t.amount, 0)
+
+  // Credit-card transactions are projected debt: they must NOT affect the cash
+  // balance until the statement payment is processed (see CLAUDE.md). Cash-only
+  // sums exclude isCC so the initial/projected *cash* figures stay accurate.
+  const sum = (list: typeof relevant) => list.reduce((s, t) => s + t.amount, 0)
+  const cashConfirmed = sum(confirmed.filter((t) => !t.isCC))
+  const cashDaily = sum(daily.filter((t) => !t.isCC))
+  const cashPending = sum(pending.filter((t) => !t.isCC))
+
   const expectedIncome = quincena === 'primera' ? 12_000 : 12_000
   const totalDebt = mockTransactions
     .filter((t) => t.category === 'deuda' && t.month === filter.month && t.year === filter.year)
     .reduce((s, t) => s + t.amount, 0)
 
-  const projected = mockBalance + expectedIncome - totalPending
+  const projected = mockBalance + expectedIncome - cashPending
   return {
     currentBalance: mockBalance,
-    initialBalance: mockBalance + totalConfirmed + totalDaily,
+    initialBalance: mockBalance + cashConfirmed + cashDaily,
     projectedBalance: projected,
     dailyAllowance: projected / remainingDays,
     totalDebt,
@@ -932,6 +942,29 @@ export const mockAdminService = {
     if (!user) throw new Error('Usuario no encontrado')
     user.status = dto.status
     const { password: _p, ...rest } = user
+    return rest
+  },
+
+  async inviteUser(dto: InviteUserDTO): Promise<AdminUserDTO> {
+    await delay()
+    if (mockUsers.some((u) => u.email.toLowerCase() === dto.email.toLowerCase()))
+      throw new Error('Este correo ya está registrado.')
+    if (mockUsers.some((u) => u.alias.toLowerCase() === dto.alias.toLowerCase()))
+      throw new Error('Este alias ya está en uso.')
+    const newUser: MockUser = {
+      id: `usr_${uuid()}`,
+      email: dto.email,
+      name: `${dto.firstName} ${dto.lastName}`,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      alias: dto.alias,
+      role: dto.role ?? 'USER',
+      status: 'active',
+      password: 'Temp1234',
+      createdAt: iso(),
+    }
+    mockUsers.push(newUser)
+    const { password: _p, ...rest } = newUser
     return rest
   },
 }

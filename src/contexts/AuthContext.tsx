@@ -50,7 +50,8 @@ interface AuthContextValue extends AuthState {
     alias: string
   ) => Promise<void>
   logout: () => Promise<void>
-  updateUser: (updates: Partial<User>) => void
+  updateUser: (updates: Partial<User>) => Promise<void>
+  setPasswordChanged: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -111,20 +112,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await authService.logout()
     localStorage.removeItem('finance_user')
+    // SECURITY: purge any service-worker-cached responses so financial data does
+    // not linger on disk after sign-out (e.g. on shared devices).
+    if (typeof caches !== 'undefined') {
+      try {
+        const keys = await caches.keys()
+        await Promise.all(keys.map((k) => caches.delete(k)))
+      } catch {
+        /* cache eviction is best-effort */
+      }
+    }
     dispatch({ type: 'LOGOUT' })
   }
 
-  const updateUser = (updates: Partial<User>) => {
+  const updateUser = async (updates: Partial<User>) => {
     if (!state.user) return
-    const updated = { ...state.user, ...updates }
+    // Persist to the backend when running against the real API; in mock mode the
+    // service returns null and we keep the optimistic local merge.
+    const server = await authService.updateProfile(updates)
+    const updated = server ?? { ...state.user, ...updates }
     localStorage.setItem('finance_user', JSON.stringify(updated))
-    if (updates.language) i18n.changeLanguage(updates.language)
-    if (updates.theme) applyTheme(updates.theme)
+    if (updated.language) i18n.changeLanguage(updated.language)
+    if (updated.theme) applyTheme(updated.theme)
+    dispatch({ type: 'UPDATE_USER', user: updated })
+  }
+
+  const setPasswordChanged = () => {
+    if (!state.user) return
+    const updated = { ...state.user, mustChangePassword: false }
+    localStorage.setItem('finance_user', JSON.stringify(updated))
     dispatch({ type: 'UPDATE_USER', user: updated })
   }
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ ...state, login, register, logout, updateUser, setPasswordChanged }}
+    >
       {children}
     </AuthContext.Provider>
   )

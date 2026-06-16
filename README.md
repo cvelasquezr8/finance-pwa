@@ -1,17 +1,20 @@
 # Finance Manager PWA
 
-Personal finance app with bi-weekly (quincena) budgeting, built with Vite + React (TS) + Tailwind CSS + shadcn/ui, following Domain-Driven Design.
+Personal finance app with bi-weekly (quincena) budgeting, built with **Next.js (App Router)** + React (TS) + Tailwind CSS + shadcn/ui, following Domain-Driven Design.
 
 ## Stack
 
-| Layer        | Tech                                |
-| ------------ | ----------------------------------- |
-| UI           | React 18 + TypeScript               |
-| Styling      | Tailwind CSS + shadcn/ui primitives |
-| Forms        | React Hook Form + Zod               |
-| HTTP         | Axios with JWT interceptors         |
-| PWA          | vite-plugin-pwa (Workbox)           |
-| Architecture | Domain-Driven Design (DDD)          |
+| Layer        | Tech                                  |
+| ------------ | ------------------------------------- |
+| Framework    | Next.js 15 (App Router) + React 18    |
+| Language     | TypeScript                            |
+| Styling      | Tailwind CSS + shadcn/ui primitives   |
+| Forms        | React Hook Form + Zod                 |
+| Server state | TanStack Query                        |
+| HTTP         | Axios with JWT interceptors           |
+| PWA          | @ducanh2912/next-pwa (Workbox)        |
+| i18n         | i18next / react-i18next (es default)  |
+| Architecture | Domain-Driven Design (DDD)            |
 
 ---
 
@@ -19,48 +22,55 @@ Personal finance app with bi-weekly (quincena) budgeting, built with Vite + Reac
 
 ```
 src/
+├── app/                       # Next.js App Router
+│   ├── (auth)/                # Public routes (login / register)
+│   ├── (protected)/           # Auth-guarded routes (dashboard, transactions, …)
+│   ├── layout.tsx             # Root layout: fonts, metadata, manifest, Providers
+│   └── globals.css            # Tailwind layers + design tokens (HSL variables)
 ├── core/
-│   ├── types/        # Domain entities & value objects
-│   └── dtos/         # API request/response shapes
+│   ├── types/                 # Domain entities & value objects
+│   └── dtos/                  # API request/response shapes
 ├── services/
-│   ├── BaseApiService.ts       # Axios instance + interceptors
-│   ├── AuthService.ts          # login / register / logout
-│   ├── TransactionService.ts   # transactions + balance endpoints
-│   └── mock/
-│       └── MockAdapter.ts      # In-memory mock with 800ms latency
-├── modules/
-│   ├── auth/         # LoginForm, RegisterForm, Zod schemas
-│   ├── dashboard/    # SummaryCards, BalanceAdjustmentModal, AnalyticsPage
-│   └── transactions/ # TransactionTable, AddDailyExpenseModal, hooks
+│   ├── BaseApiService.ts      # Axios instance + JWT interceptors
+│   ├── api-config.ts          # Hybrid real/mock resolver (NEXT_PUBLIC_*)
+│   ├── AuthService.ts / TransactionService.ts / CardService.ts / …
+│   └── mock/MockAdapter.ts    # In-memory mock with simulated latency
+├── modules/                   # Feature slices: components / hooks / schemas
+│   ├── auth/  dashboard/  transactions/  cards/  events/  admin/  notifications/
 ├── components/
-│   ├── layout/       # Sidebar (desktop), BottomBar (mobile), MonthFilter
-│   └── ui/           # shadcn/ui primitives (Button, Card, Dialog, …)
-└── contexts/
-    └── AuthContext.tsx  # JWT auth state via useReducer
+│   ├── layout/                # Sidebar (desktop), BottomBar (mobile), filters
+│   └── ui/                    # shadcn/ui primitives
+├── contexts/                  # AuthContext, NotificationContext
+└── i18n/                      # i18next config + es/en locales
 ```
 
 ---
 
-## How the Mock Layer Works
+## Hybrid Mock / Real API
+
+The app ships with a complete in-memory mock so the UI runs with zero backend. The
+mode is resolved in [`src/services/api-config.ts`](src/services/api-config.ts):
 
 ```
-UI Component
-    │
-    ▼
-useTransactions / useDashboard   ← custom hooks
-    │
-    ▼
-TransactionService / BalanceService   ← domain services (BaseApiService)
-    │
-    ├── USE_MOCK = true  →  MockAdapter.ts  (800ms delay, in-memory state)
-    └── USE_MOCK = false →  Real API (axios, BASE_URL from VITE_API_URL)
+useTransactions / useDashboard            ← custom hooks (TanStack Query)
+        │
+        ▼
+TransactionService / BalanceService …     ← domain services (extend BaseApiService)
+        │
+        ├── useMock() === true   →  MockAdapter.ts  (in-memory state)
+        └── useMock() === false  →  Real API (axios, baseURL from NEXT_PUBLIC_API_HOST)
 ```
 
-**To switch to a real API:**
+**Switching to a real backend** — set env vars (see `.env.example`):
 
-1. Set `USE_MOCK = false` in `src/services/AuthService.ts` and `src/services/TransactionService.ts`
-2. Set your API base URL: `VITE_API_URL=https://api.yourapp.com/v1` in `.env`
-3. The commented endpoint paths in each service method show the expected routes
+```bash
+NEXT_PUBLIC_API_HOST=https://api.yourapp.com/api/v1   # real backend
+NEXT_PUBLIC_FORCE_MOCK=                                # leave empty
+```
+
+- When `NEXT_PUBLIC_API_HOST` is **empty/unset**, every service uses mocks.
+- `NEXT_PUBLIC_FORCE_MOCK=true` keeps mocks active even if a host is configured
+  (useful for local UI work against an unstable backend).
 
 ---
 
@@ -80,6 +90,8 @@ GET    /api/v1/balance?month=&year=&quincena=
 POST   /api/v1/balance/adjust
 ```
 
+> Canonical route definitions live in [`src/services/api-routes.ts`](src/services/api-routes.ts).
+
 ---
 
 ## Balance Projections
@@ -90,21 +102,37 @@ POST   /api/v1/balance/adjust
 | **Gasto Diario**     | `projectedBalance / remainingDaysInMonth`                 |
 | **Deuda Total**      | Sum of all `category = 'deuda'` transactions in the month |
 
+> Credit-card (`isCC`) transactions are **projected debt** — they do not reduce the
+> immediate cash balance until the statement payment is processed.
+
 ---
 
 ## Getting Started
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # production + PWA service worker
-npm run preview    # preview production build
+npm run dev        # http://localhost:3000
+npm run build      # production build + PWA service worker (generated into public/)
+npm run start      # serve the production build
 ```
 
-**Login:** any `*@*.com` email + 6-char password works in mock mode.
+**Login (mock mode):** any `*@*.com` email + 6-char password works.
+
+### Quality scripts
+
+```bash
+npm run lint           # next lint
+npm run test           # vitest (unit + component)
+npm run test:e2e       # playwright (boots `next build && next start` on :3000)
+npm run test:full      # lint + unit + e2e
+```
 
 ---
 
 ## PWA
 
-The app is installable on mobile (Android/iOS) and desktop via the browser's "Add to Home Screen" / install prompt. The Workbox service worker pre-caches all static assets and uses **NetworkFirst** for API calls with a 5-minute cache fallback.
+Installable on mobile (Android/iOS) and desktop via the browser's "Add to Home Screen" /
+install prompt. The manifest lives at [`public/manifest.webmanifest`](public/manifest.webmanifest)
+with icons under `public/icons/`. The Workbox service worker (generated by
+`@ducanh2912/next-pwa` into `public/sw.js` at build time, git-ignored) uses **NetworkFirst**
+for API calls with a 5-minute cache fallback. The SW is disabled in development.

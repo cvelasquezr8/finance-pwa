@@ -3,11 +3,12 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { ForcePasswordChange } from '@/modules/auth/components/ForcePasswordChange'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -29,6 +30,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   }
 
   if (!isAuthenticated) return null
+
+  // Invited users must replace their temporary password before using the app.
+  if (user?.mustChangePassword) return <ForcePasswordChange />
 
   return (
     <NotificationProvider>

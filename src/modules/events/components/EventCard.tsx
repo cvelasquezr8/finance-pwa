@@ -58,7 +58,7 @@ export function EventCard({ event, linkedTransactions, staggerIndex = 0 }: Props
         </div>
         <span
           className={cn(
-            'shrink-0 rounded-full border-l-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+            'shrink-0 rounded-full border-l-2 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide',
             STATUS_STYLES[event.status]
           )}
         >

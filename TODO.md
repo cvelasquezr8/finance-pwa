@@ -1,6 +1,6 @@
 # Finance PWA — TODO & Known Issues
 
-> Last updated: 2026-05-29
+> Last updated: 2026-06-15
 > Branch: `feat/nextjs-migration`
 
 Tracking list of bugs, missing pieces, and follow-up work discovered during the
@@ -8,46 +8,12 @@ Vite → Next.js App Router migration and the UI polish pass. Ordered by priorit
 
 ---
 
-## 🔴 Bugs (broken / failing)
-
-### 1. Missing PWA manifest & icons → `GET /manifest.webmanifest` returns 500
-- **What:** `src/app/layout.tsx` declares `manifest: '/manifest.webmanifest'` but
-  `public/` is empty — no manifest file, no app icons.
-- **Impact:** 500 error on every page load; PWA install is not possible.
-- **Fix:** Create `public/manifest.webmanifest` (name, short_name, theme_color
-  `#1c1917`, background, display `standalone`, start_url `/`) and add icon set
-  (192×192, 512×512, maskable). Reference them in the manifest.
-- **Files:** `public/manifest.webmanifest`, `public/icons/*`
-
-### 2. `api-config` unit tests reference stale `VITE_*` env vars (2 failing tests)
-- **What:** `tests/unit/api-config.test.ts` stubs `VITE_API_HOST` / `VITE_FORCE_MOCK`,
-  but `src/services/api-config.ts` now reads `NEXT_PUBLIC_API_HOST` /
-  `NEXT_PUBLIC_FORCE_MOCK` (changed during the Next.js migration).
-- **Impact:** 2 tests fail permanently:
-  - `uses real API when VITE_API_HOST is provided`
-  - `strips trailing slashes from the host`
-- **Fix:** Update the test to stub `NEXT_PUBLIC_*`. Note: `api-config.ts` captures
-  the env vars in module-level constants at import time, so the test's
-  `vi.resetModules()` + re-import pattern must set the env BEFORE the dynamic import
-  (it already does — only the variable names are wrong).
-- **Files:** `tests/unit/api-config.test.ts`
-
----
-
 ## 🟡 Missing / incomplete
-
-### 3. Geist Mono font not installed → headings fall back to monospace
-- **What:** During the `next/font` migration the `geist` npm package was found to
-  be absent, so `GeistMono` was omitted from `layout.tsx`. Headings (`--font-heading`)
-  currently fall back to the generic `monospace`.
-- **Fix:** `npm install geist`, then re-enable the `localFont` block in
-  `src/app/layout.tsx` and add `${geistMono.variable}` back to the `<html>` className.
-- **Files:** `src/app/layout.tsx`, `package.json`
 
 ### 4. Branch not merged
 - **What:** All session work lives on `feat/nextjs-migration`. Not merged to `master`.
-- **Fix:** When ready, merge or open a PR. Run full test suite first (note the 2
-  known `api-config` failures above — fix #2 before merging for a green suite).
+- **Fix:** When ready, merge or open a PR. Suite is green (`npm run lint && npm run test`
+  pass; `npm run build` OK).
 
 ---
 
@@ -78,7 +44,37 @@ Vite → Next.js App Router migration and the UI polish pass. Ordered by priorit
 
 ---
 
-## ✅ Done this session (for reference)
+## ✅ Done — 2026-06-15 review pass
+
+- **PWA fixed:** created `public/manifest.webmanifest` + SVG icons (`public/icons/`,
+  `public/favicon.svg`); icon metadata wired in `layout.tsx`. Manifest no longer 404s.
+- **Geist Mono wired:** installed `geist`, `GeistMono` in `layout.tsx`, `--font-heading`
+  → `var(--font-geist-mono)`, tailwind fonts via CSS variables. (Found the `.theme` block
+  was dead, so headings weren't even falling back to monospace.)
+- **Tests fixed:** `api-config.test.ts` stubs now `NEXT_PUBLIC_*` (was `VITE_*`).
+- **Playwright fixed:** `webServer` → `next build && next start` on port 3000 (was Vite `preview`).
+- **Vite cleanup:** removed `vite-plugin-pwa` + unused `@fontsource/*`; deleted `dist/`;
+  `tsconfig.node.json` no longer references `vite.config.ts`. (`vite`/`@vitejs/plugin-react`
+  kept — Vitest needs them.)
+- **Docs updated to Next.js:** `README.md`, `CODING_STANDARDS.md`, `claude.md` (rules
+  realigned to code: client-first, file-naming by export, CC expiry-slash marked as a
+  pending feature).
+- **CC balance bug:** `MockAdapter.computeBalance` now excludes `isCC` from
+  `initialBalance`/`projectedBalance` (cash-only sums).
+- **Zod schemas centralized:** `editTransactionSchema`, `incomeSchema`, `profileSchema`
+  moved out of components; `cardId↔isCC` refinement added.
+- **`text-[10px]` → `text-2xs`** design token across components.
+- **Auth hardening:** SSR-guarded `localStorage` in `BaseApiService`; **fixed** 401
+  redirect `/login` → `/auth` (`/login` didn't exist).
+
+### Still open / new follow-ups
+- Add `<DialogDescription>` to modals (Radix `aria-describedby` warning, ~12 modals).
+- Add the `next` ESLint plugin (`next/core-web-vitals`) to `eslint.config.js`.
+- `next lint` deprecates in Next 16 → migrate to ESLint CLI.
+
+---
+
+## ✅ Done — earlier session (for reference)
 
 - Route group conflict fixed (`(auth)/page` → `(auth)/auth/page` = `/auth`)
 - `localStorage` SSR crash guarded in `src/i18n/index.ts`

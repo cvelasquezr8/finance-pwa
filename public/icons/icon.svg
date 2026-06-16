@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Finance Manager">
+  <rect width="512" height="512" rx="112" fill="#1c1917"/>
+  <!-- ascending bars -->
+  <rect x="120" y="300" width="56" height="92" rx="14" fill="#f59e0b" opacity="0.55"/>
+  <rect x="228" y="244" width="56" height="148" rx="14" fill="#f59e0b" opacity="0.78"/>
+  <rect x="336" y="180" width="56" height="212" rx="14" fill="#f59e0b"/>
+  <!-- trend line -->
+  <path d="M132 268 L256 212 L360 148" stroke="#fcd34d" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="360" cy="148" r="18" fill="#fcd34d"/>
+</svg>

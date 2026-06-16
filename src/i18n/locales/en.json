@@ -1,4 +1,7 @@
 {
+  "common": {
+    "dialogForm": "Dialog form"
+  },
   "months": [
     "January",
     "February",
@@ -45,6 +48,15 @@
     "logout": "Sign out"
   },
   "auth": {
+    "actionRequired": "Action required",
+    "changePasswordTitle": "Change your password",
+    "changePasswordSubtitle": "Your account was created with a temporary password. Set a new one to continue.",
+    "currentPassword": "Temporary password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "changePasswordCta": "Save password",
+    "passwordChanged": "Password updated",
+    "passwordChangeError": "Could not change the password",
     "loginTitle": "Finance Manager",
     "loginSubtitle": "Sign in to continue",
     "email": "Email",
@@ -310,6 +322,12 @@
     "navLabel": "Admin Panel",
     "title": "Admin Panel",
     "subtitle": "Manage users and their permissions",
+    "invite": "Invite",
+    "inviteTitle": "Invite user",
+    "inviteSubtitle": "The account is created and a temporary password is emailed to them.",
+    "inviteCta": "Send invitation",
+    "inviteSent": "Invitation sent",
+    "inviteError": "Could not invite the user",
     "refresh": "Refresh",
     "totalUsers": "Total users",
     "admins": "Admins",

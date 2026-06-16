@@ -51,7 +51,6 @@ export function BottomBar() {
   )
 
   const pillWidthPct = 100 / NAV_ITEMS.length
-  const pillOffset = activeIndex >= 0 ? activeIndex * pillWidthPct : 0
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:hidden">

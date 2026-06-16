@@ -4,6 +4,7 @@ import { Shield, MoreHorizontal, MoreVertical, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { AdminUserDTO } from '@/core/dtos'
 import { useAdminUsers } from '../hooks/useAdminUsers'
+import { InviteUserModal } from './InviteUserModal'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -117,7 +118,7 @@ function UserCard({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPr
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide',
               ROLE_STYLES[user.role]
             )}
           >
@@ -126,13 +127,13 @@ function UserCard({ user, onToggleRole, onBlock, onDelete, onRestore }: ActionPr
           </span>
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+              'rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide',
               STATUS_STYLES[user.status]
             )}
           >
             {t(`admin.status.${user.status}`)}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             {new Date(user.createdAt).toLocaleDateString(undefined, {
               year: 'numeric',
               month: 'short',
@@ -252,6 +253,7 @@ export function AdminUsersPage() {
     blockUser,
     deleteUser,
     restoreUser,
+    inviteUser,
   } = useAdminUsers(tableState.query)
 
   const actionProps = (user: AdminUserDTO): ActionProps => ({
@@ -277,16 +279,19 @@ export function AdminUsersPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight">{t('admin.title')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{t('admin.subtitle')}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchUsers()}
-          disabled={isFetching}
-          className="gap-2"
-        >
-          <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-          <span className="hidden sm:inline">{t('admin.refresh')}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <InviteUserModal onInvite={inviteUser} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchUsers()}
+            disabled={isFetching}
+            className="gap-2"
+          >
+            <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
+            <span className="hidden sm:inline">{t('admin.refresh')}</span>
+          </Button>
+        </div>
       </div>
 
       {error && (

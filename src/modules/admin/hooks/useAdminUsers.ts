@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import type { AdminUserDTO, PaginatedResponseDTO, PaginationQueryDTO } from '@/core/dtos'
+import type {
+  AdminUserDTO,
+  InviteUserDTO,
+  PaginatedResponseDTO,
+  PaginationQueryDTO,
+} from '@/core/dtos'
 import { adminService } from '@/services/AdminService'
 
 const EMPTY_PAGE: PaginatedResponseDTO<AdminUserDTO> = {
@@ -42,6 +47,11 @@ export function useAdminUsers(query: PaginationQueryDTO = {}) {
     onSuccess: invalidate,
   })
 
+  const inviteMutation = useMutation({
+    mutationFn: (dto: InviteUserDTO) => adminService.inviteUser(dto),
+    onSuccess: invalidate,
+  })
+
   const data = usersQuery.data ?? EMPTY_PAGE
   const error = usersQuery.error
     ? (usersQuery.error as Error).message
@@ -65,5 +75,6 @@ export function useAdminUsers(query: PaginationQueryDTO = {}) {
     blockUser: (userId: string) => blockMutation.mutateAsync(userId),
     deleteUser: (userId: string) => deleteMutation.mutateAsync(userId),
     restoreUser: (userId: string) => restoreMutation.mutateAsync(userId),
+    inviteUser: (dto: InviteUserDTO) => inviteMutation.mutateAsync(dto),
   }
 }

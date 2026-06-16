@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -61,6 +62,7 @@ export function CreateEventModal({ open, onOpenChange, onCreate }: Props) {
             <PartyPopper className="h-5 w-5 text-amber-500" />
             {t('events.createEvent')}
           </DialogTitle>
+          <DialogDescription className="sr-only">{t('common.dialogForm')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
