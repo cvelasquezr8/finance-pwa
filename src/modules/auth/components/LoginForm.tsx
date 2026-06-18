@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { isAxiosError } from 'axios'
 import { TrendingUp, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { createLoginSchema, type LoginFormValues } from '../schemas/authSchemas'
@@ -34,10 +35,18 @@ export function LoginForm({ onSwitchToRegister }: Props) {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       await login(data.email, data.password)
-    } catch {
+    } catch (err) {
+      let description = t('auth.loginErrorDesc')
+      if (isAxiosError(err)) {
+        const msg = err.response?.data?.message
+        if (typeof msg === 'string') description = msg
+        else if (Array.isArray(msg) && typeof msg[0] === 'string') description = msg[0]
+      } else if (err instanceof Error) {
+        description = err.message
+      }
       toast({
         title: t('auth.loginError'),
-        description: t('auth.loginErrorDesc'),
+        description,
         variant: 'destructive',
       })
     }

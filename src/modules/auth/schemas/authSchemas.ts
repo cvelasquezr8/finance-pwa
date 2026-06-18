@@ -15,7 +15,7 @@ export function createRegisterSchema(msg: ValidationMessages) {
       lastName: z.string().min(2, msg.minChars(2)),
       middleName: z.string().optional(),
       secondLastName: z.string().optional(),
-      alias: z.string().regex(/^@[a-z0-9_]{2,20}$/, msg.aliasFormat()),
+      alias: z.string().regex(/^[a-z0-9_]{2,20}$/, msg.aliasFormat()),
       email: z.string().email(msg.invalidEmail()),
       password: z
         .string()

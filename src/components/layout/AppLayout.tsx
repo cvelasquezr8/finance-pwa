@@ -1,6 +1,5 @@
 'use client'
 
-import { Toaster } from 'sonner'
 import { Sidebar } from './Sidebar'
 import { BottomBar } from './BottomBar'
 import { MobileHeader } from './MobileHeader'
@@ -16,7 +15,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
       <BottomBar />
       <FloatingActionButton />
-      <Toaster position="bottom-right" duration={3000} richColors theme="system" />
     </div>
   )
 }

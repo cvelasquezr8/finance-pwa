@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
@@ -8,8 +8,18 @@ import { NotificationPanel } from './NotificationPanel'
 import { cn } from '@/lib/utils'
 
 export function NotificationBell({ className }: { className?: string }) {
-  const { unreadCount } = useNotifications()
+  const { unreadCount, markAllAsRead } = useNotifications()
   const [open, setOpen] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (open && unreadCount > 0) {
+      timerRef.current = setTimeout(() => markAllAsRead(), 1500)
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [open, unreadCount, markAllAsRead])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

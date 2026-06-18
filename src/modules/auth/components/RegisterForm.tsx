@@ -20,6 +20,29 @@ interface Props {
   onSwitchToLogin: () => void
 }
 
+const LOCALE_CURRENCY_MAP: Record<string, string> = {
+  'es-MX': 'MXN',
+  'es-AR': 'ARS',
+  'es-CO': 'COP',
+  'es-CL': 'CLP',
+  'es-PE': 'PEN',
+  'es-VE': 'VES',
+  'es-ES': 'EUR',
+  'en-US': 'USD',
+  'en-GB': 'GBP',
+  'en-CA': 'CAD',
+  'en-AU': 'AUD',
+  'pt-BR': 'BRL',
+}
+
+function detectLocale() {
+  const nav = typeof navigator !== 'undefined' ? navigator.language : 'es-MX'
+  const language = nav.split('-')[0] ?? 'es'
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'America/Mexico_City'
+  const currency = LOCALE_CURRENCY_MAP[nav] ?? 'MXN'
+  return { language, timezone, currency }
+}
+
 interface PasswordRule {
   key: string
   label: string
@@ -99,14 +122,20 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
   const aliasValue = watch('alias') ?? ''
 
   const handleAliasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value
-    if (v && !v.startsWith('@')) v = `@${v}`
-    setValue('alias', v.toLowerCase(), { shouldValidate: true })
+    setValue('alias', e.target.value.toLowerCase(), { shouldValidate: true })
   }
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      await registerUser(data.firstName, data.lastName, data.email, data.password, data.alias)
+      const locale = detectLocale()
+      await registerUser(
+        data.firstName,
+        data.lastName,
+        data.email,
+        data.password,
+        data.alias,
+        locale
+      )
       toast({
         title: t('auth.registerPendingTitle'),
         description: t('auth.registerPendingDesc'),
@@ -166,7 +195,7 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
                 <AtSign className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="alias"
-                  placeholder="@tu_alias"
+                  placeholder="tu_alias"
                   className="pl-8"
                   value={aliasValue}
                   onChange={handleAliasChange}

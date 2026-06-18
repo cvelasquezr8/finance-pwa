@@ -18,6 +18,7 @@ export type TransactionStatus = 'pending' | 'confirmed' | 'cancelled'
 
 export interface Transaction {
   id: string
+  numericId: number
   description: string
   amount: number
   type: TransactionType
@@ -71,6 +72,7 @@ export interface Card {
 
 export interface User {
   id: string
+  numericId: number
   email: string
   name: string
   firstName: string

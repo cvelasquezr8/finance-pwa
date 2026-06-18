@@ -3,6 +3,7 @@ import type { AuthState, User } from '@/core/types'
 import { authService } from '@/services/AuthService'
 import { getStoredToken } from '@/services/BaseApiService'
 import i18n from '@/i18n'
+import { useSplash } from '@/contexts/SplashContext'
 
 type AuthAction =
   | { type: 'SET_USER'; user: User; token: string }
@@ -47,7 +48,8 @@ interface AuthContextValue extends AuthState {
     lastName: string,
     email: string,
     password: string,
-    alias: string
+    alias: string,
+    locale?: { language: string; timezone: string; currency: string }
   ) => Promise<void>
   logout: () => Promise<void>
   updateUser: (updates: Partial<User>) => Promise<void>
@@ -58,6 +60,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
+  const { showSplash } = useSplash()
 
   useEffect(() => {
     const token = getStoredToken()
@@ -86,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     applyTheme(user.theme)
     localStorage.setItem('finance_user', JSON.stringify(user))
     dispatch({ type: 'SET_USER', user, token })
+    await showSplash('login')
   }
 
   const register = async (
@@ -93,15 +97,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName: string,
     email: string,
     password: string,
-    alias: string
+    alias: string,
+    locale?: { language: string; timezone: string; currency: string }
   ) => {
-    await authService.register({ firstName, lastName, email, password, alias })
+    await authService.register({ firstName, lastName, email, password, alias, ...locale })
     // Account starts as blocked — admin must approve before user can log in.
     // No token is issued at registration time.
   }
 
   const logout = async () => {
-    await authService.logout()
+    await Promise.all([showSplash('logout'), authService.logout().catch(() => {})])
     localStorage.removeItem('finance_user')
     // SECURITY: purge any service-worker-cached responses so financial data does
     // not linger on disk after sign-out (e.g. on shared devices).

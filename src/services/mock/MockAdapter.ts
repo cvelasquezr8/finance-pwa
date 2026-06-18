@@ -639,6 +639,7 @@ export const mockAuthService = {
       expiresIn: 3600,
       user: {
         id: found.id,
+        numericId: 0,
         email: found.email,
         name: found.name,
         firstName: found.firstName,
@@ -685,6 +686,7 @@ export const mockAuthService = {
       expiresIn: 3600,
       user: {
         id: newUser.id,
+        numericId: 0,
         email: newUser.email,
         name: newUser.name,
         firstName: newUser.firstName,

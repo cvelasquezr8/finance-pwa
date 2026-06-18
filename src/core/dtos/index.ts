@@ -27,6 +27,9 @@ export interface RegisterRequestDTO {
   email: string
   password: string
   alias: string
+  language?: string
+  timezone?: string
+  currency?: string
 }
 
 export interface AuthResponseDTO {
@@ -35,6 +38,7 @@ export interface AuthResponseDTO {
   expiresIn: number
   user: {
     id: string
+    numericId: number
     email: string
     name: string
     firstName: string

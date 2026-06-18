@@ -7,6 +7,7 @@ Personal Finance PWA for tracking transactions, budgets, and cash flow.
 - **Core Concept:** Everything is a `Transaction`. Differentiate between `INCOME` and `EXPENSE`. Never use "Expense" as a generic term.
 - **Credit Card Logic:** CC transactions (`isCC: true`) represent projected debt. They must not decrease the immediate "Cash Balance" until the statement payment is processed.
 - **Sanitization Rule (future feature):** When a credit-card **expiration date** input is added, strictly **DO NOT** remove or sanitize slashes (`/`) from it. ⚠️ No `expiryDate` input exists yet — the `CardDTO.expiryDate` field is display-only; this rule applies the moment the input is built.
+- **Login lockout:** The backend blocks an account after **3** consecutive wrong passwords. On a failed login the API returns `401` with `code: 'INVALID_CREDENTIALS'` and a `remaining` count in the message — surface the remaining attempts to the user. Once blocked it returns `401 code: 'ACCOUNT_LOCKED'`; show a "contact an administrator" state (no self-service unlock). A successful login clears the counter.
 - **Status:** The Vite → Next.js (App Router) migration is **complete**; current focus is hardening, PWA polish, and feature work.
 
 ## 2. Tech Stack

@@ -22,6 +22,7 @@ export const API_ROUTES = {
     list: '/transactions',
     create: '/transactions',
     history: '/transactions/history',
+    categories: '/transactions/categories',
     byId: (id: string) => `/transactions/${id}`,
     confirm: (id: string) => `/transactions/${id}/confirm`,
     receipt: (id: string) => `/transactions/${id}/receipt`,
